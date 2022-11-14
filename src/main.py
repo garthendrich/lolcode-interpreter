@@ -1,14 +1,17 @@
+import re
+
+
 class Interpreter:
-    def __init__(
-        self,
-    ):
-        self.symbolTable = []
+    def __init__(self):
+        keywords = ["HAI", "KTHXBYE", "BTW", "OBTW", "TLDR", "I HAS A"]
+        identifierPattern = "[a-zA-Z]\w*"
+        self.patterns = [*keywords, identifierPattern]
 
     def process(self, content):
         self.tokenize(content)
 
     def tokenize(self, content):
-        pass
+        self.tokens = re.findall("|".join(self.patterns), content)
 
 
 def main():
@@ -37,6 +40,8 @@ HOW IZ I POWERTWO YR NUM
 KTHXBYE
 """
     )
+
+    print(interpreter.tokens)
 
 
 if __name__ == "__main__":
