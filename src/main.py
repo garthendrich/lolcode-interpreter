@@ -57,8 +57,8 @@ class Interpreter:
             r"^TIL$": "[temp] placeholder",
             r"^WILE$": "[temp] placeholder",
             r"^IM OUTTA YR$": "[temp] placeholder",
-            # r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
-            # r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
+            #r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
+            #r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
         }
         self.allPatterns = dict.keys(self.patternTypes)
 
@@ -73,11 +73,9 @@ class Interpreter:
         for line in content.split("\n"):
             string = ""
             lineIndex = 0
-            while lineIndex < len(line):
-                string += line[lineIndex]
+            for word in line.split():
+                string += word
                 lexemeType = self._getLexemeType(string)
-
-                lineIndex += 1
 
                 if lexemeType != None:
                     # skip space after lexeme
@@ -87,6 +85,8 @@ class Interpreter:
                     self.lexemes.append(token)
 
                     string = ""
+
+                string += " "
 
             # if string != "":
             #     print("Syntax error")
