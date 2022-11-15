@@ -1,17 +1,43 @@
 import re
 
 
+class Token:
+    def __init__(self, lexeme, lexemeType):
+        self.lexeme = lexeme
+        self.lexemeType = lexemeType
+
+
 class Interpreter:
     def __init__(self):
-        keywords = ["HAI", "KTHXBYE", "BTW", "OBTW", "TLDR", "I HAS A"]
-        identifierPattern = "[a-zA-Z]\w*"
-        self.patterns = [*keywords, identifierPattern]
+        self.symbolTable = []
+
+        self.patternTypes = {
+            "HAI": "keyword",
+            "KTHXBYE": "keyword",
+            "BTW": "keyword",
+            "OBTW": "keyword",
+            "TLDR": "keyword",
+            "I HAS A": "keyword",
+            # more here
+            "[a-zA-Z]\w*": "identifier",
+        }
+        self.allPatterns = dict.keys(self.patternTypes)
 
     def process(self, content):
         self.tokenize(content)
 
     def tokenize(self, content):
-        self.tokens = re.findall("|".join(self.patterns), content)
+        lexemes = re.findall("|".join(self.allPatterns), content)
+        for lexeme in lexemes:
+            lexemeType = self.getLexemeType(lexeme)
+            token = Token(lexeme, lexemeType)
+            self.symbolTable.append(token)
+
+    def getLexemeType(self, lexeme):
+        for pattern in self.allPatterns:
+            if re.match(f"^{pattern}$", lexeme):
+                lexemeType = self.patternTypes[pattern]
+                return lexemeType
 
 
 def main():
@@ -41,7 +67,9 @@ KTHXBYE
 """
     )
 
-    print(interpreter.tokens)
+    # test
+    for token in interpreter.symbolTable:
+        print(f"{str.ljust(token.lexeme, 16)} {token.lexemeType}")
 
 
 if __name__ == "__main__":
