@@ -9,17 +9,18 @@ class Token:
 
 class Interpreter:
     def __init__(self):
+        self.lexemes = []
         self.symbolTable = []
 
         self.patternTypes = {
-            "HAI": "keyword",
-            "KTHXBYE": "keyword",
-            "BTW": "keyword",
-            "OBTW": "keyword",
-            "TLDR": "keyword",
-            "I HAS A": "keyword",
+            "HAI": "code delimiter",
+            "KTHXBYE": "code delimiter",
+            "BTW": "comment keyword",
+            "OBTW": "multiline comment delimiter",
+            "TLDR": "multiline comment delimiter",
+            "I HAS A": "variable declaration",
             # more here
-            "[a-zA-Z]\w*": "identifier",
+            "[a-zA-Z]\w*": "[temp] identifier",
         }
         self.allPatterns = dict.keys(self.patternTypes)
 
@@ -31,7 +32,7 @@ class Interpreter:
         for lexeme in lexemes:
             lexemeType = self.getLexemeType(lexeme)
             token = Token(lexeme, lexemeType)
-            self.symbolTable.append(token)
+            self.lexemes.append(token)
 
     def getLexemeType(self, lexeme):
         for pattern in self.allPatterns:
@@ -41,7 +42,6 @@ class Interpreter:
 
 
 def main():
-
     interpreter = Interpreter()
 
     # sample code reference
@@ -71,7 +71,7 @@ KTHXBYE
     )
 
     # test
-    for token in interpreter.symbolTable:
+    for token in interpreter.lexemes:
         print(f"{str.ljust(token.lexeme, 16)} {token.lexemeType}")
 
 
