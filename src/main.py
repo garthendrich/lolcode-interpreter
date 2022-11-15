@@ -43,6 +43,9 @@ class Interpreter:
 def main():
 
     interpreter = Interpreter()
+
+    # sample code reference
+    # https://www.tutorialspoint.com/lolcode/lolcode_some_more_examples.htm
     interpreter.process(
         """
 HAI 1.2
