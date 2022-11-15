@@ -1,6 +1,5 @@
 import re
 
-
 class Token:
     def __init__(self, lexeme, lexemeType):
         self.lexeme = lexeme
@@ -19,8 +18,46 @@ class Interpreter:
             "OBTW": "multiline comment delimiter",
             "TLDR": "multiline comment delimiter",
             "I HAS A": "variable declaration",
-            # more here
-            "[a-zA-Z]\w*": "[temp] identifier",
+            "ITZ": "variable assignment",
+            "\bR\b": "variable assignment",
+            "SUM OF": "arithemtic operation",
+            "DIFF OF": "arithemtic operation",
+            "PRODUKT OF": "arithemtic operation",
+            "QUOSHUNT OF": "arithemtic operation",
+            "MOD OF": "arithemtic operation",
+            "BIGGR OF": "arithemtic operation",
+            "SMALLR": "arithemtic operation",
+            "BOTH OF": "boolean operation",
+            "EITHER OF": "boolean operation",
+            "WON OF": "boolean operation",
+            # "NOT": "boolean operation",
+            # "ANY OF": "boolean operation",
+            # "ALL OF": "boolean operation",
+            # "BOTH SAEM": "comparison operation",
+            # "DIFFRINT": "comparison operation",
+            # "SMOOSH": "concantenation operaion",
+            # "MAEK": "typecasting keyword",
+            # "\bA\b": "[temp] placeholder",
+            # "IS NOW A": "[temp] placeholder",
+            # "VISIBLE": "output keyword",
+            # "GIMMEH": "input keyword",
+            # "O RLY\?": "if-then statement keyword",
+            # "YA RLY": "flow-control statement delimeter",
+            # "MEBBE": "else-if statement keyword",
+            # "NO WAI": "[temp] placeholder",
+            # "OIC": "[temp] placeholder",
+            # "WTF\?": "[temp] placeholder",
+            # "OMG": "[temp] placeholder",
+            # "OMGTWF": "[temp] placeholder",
+            # "IM IN YR": "[temp] placeholder",
+            # "UPPIN": "[temp] placeholder", 
+            # "NERFIN": "[temp] placeholder", 
+            # "YR": "[temp] placeholder",
+            # "TIL": "[temp] placeholder",
+            # "WILE": "[temp] placeholder",
+            # "IM OUTTA YR": "[temp] placeholder",
+            # "I HAS A ([a-zA-Z]\w*)": "variable identifier",
+            # "IM IN YR ([a-zA-Z]\w*)": "loop identifier",
         }
         self.allPatterns = dict.keys(self.patternTypes)
 
@@ -29,6 +66,7 @@ class Interpreter:
 
     def tokenize(self, content):
         lexemes = re.findall("|".join(self.allPatterns), content)
+        print(lexemes)
         for lexeme in lexemes:
             lexemeType = self.getLexemeType(lexeme)
             token = Token(lexeme, lexemeType)
