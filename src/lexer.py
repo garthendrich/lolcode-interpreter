@@ -1,6 +1,5 @@
 import re
 
-
 class Lexer:
     def __init__(self):
         self.lexemes = []
@@ -43,15 +42,18 @@ class Lexer:
             r"^WTF\?$": "[temp] placeholder",
             r"^OMG$": "[temp] placeholder",
             r"^OMGTWF$": "[temp] placeholder",
-            r"^IM IN YR$": "[temp] placeholder",
+            r"^IM IN YR$": "loop declaration",
             r"^UPPIN$": "[temp] placeholder",
             r"^NERFIN$": "[temp] placeholder",
             r"^YR$": "[temp] placeholder",
             r"^TIL$": "[temp] placeholder",
             r"^WILE$": "[temp] placeholder",
             r"^IM OUTTA YR$": "[temp] placeholder",
-            # r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
-            # r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
+            r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
+            r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
+            r"^-?(\d+.\d*|\d*.\d+)$" : "float literal",
+            r"^-?\d+$" : "integer literal",
+            r"\".*\"" : "string literal",
         }
 
     def process(self, content):
@@ -64,25 +66,28 @@ class Lexer:
     def _tokenize(self, content):
         for line in content.split("\n"):
             string = ""
-            lineIndex = 0
             for word in line.split():
                 string += word
                 lexemeType = self._getLexemeType(string)
 
                 if lexemeType != None:
-                    # skip space after lexeme
-                    lineIndex += 1
-
                     token = Token(string, lexemeType)
                     self.lexemes.append(token)
 
-                    string = ""
+                    #mema to pre HAHHAHAHAHA ayusin mo na lang
+                    if(token.lexemeType == 'variable declaration' and len(line.split()) > 3):
+                        string += " "
+                    elif(token.lexemeType == 'loop declaration'):
+                        string += " "
+                    else:
+                        string = ""
 
-                string += " "
+                else:
+                    string += " "
 
             # if string != "":
-            #     print("Syntax error")
-            #     break
+            #      print("Syntax error")
+            #      break
 
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)

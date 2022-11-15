@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
+from lexer import *
 
 def main():
     root = Tk()
@@ -31,7 +32,13 @@ class Interpreter:
         self.console = Console(mainframe)
 
     def processText(self):
-        self.console.outputResult(self.textEditor.getInputFromTextEditor())
+        input_text = self.textEditor.getInputFromTextEditor()
+
+        lexer = Lexer()
+        lexer.process(input_text)
+        self.table_lexemes.insertObjectList(lexer.lexemes)
+
+        self.console.outputResult(input_text)
 
 class TextEditor:
     def __init__(self, frame):
@@ -82,9 +89,9 @@ class Table:
     def addData(self, data_tuple):
         self.table.insert('', END, values = data_tuple)
 
-    def insertTupleList(self, data_tuple_list):
-        for data in data_tuple_list:
-            addData(data)
+    def insertObjectList(self, object_list):
+        for token_object in object_list:
+            self.addData((token_object.lexeme, token_object.lexemeType))
 
 main()
 #References
