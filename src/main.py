@@ -1,5 +1,6 @@
 import re
 
+
 class Token:
     def __init__(self, lexeme, lexemeType):
         self.lexeme = lexeme
@@ -12,98 +13,141 @@ class Interpreter:
         self.symbolTable = []
 
         self.patternTypes = {
-            "HAI": "code delimiter",
-            "KTHXBYE": "code delimiter",
-            "BTW": "comment keyword",
-            "OBTW": "multiline comment delimiter",
-            "TLDR": "multiline comment delimiter",
-            "I HAS A": "variable declaration",
-            "ITZ": "variable assignment",
-            "\bR\b": "variable assignment",
-            "SUM OF": "arithemtic operation",
-            "DIFF OF": "arithemtic operation",
-            "PRODUKT OF": "arithemtic operation",
-            "QUOSHUNT OF": "arithemtic operation",
-            "MOD OF": "arithemtic operation",
-            "BIGGR OF": "arithemtic operation",
-            "SMALLR": "arithemtic operation",
-            "BOTH OF": "boolean operation",
-            "EITHER OF": "boolean operation",
-            "WON OF": "boolean operation",
-            # "NOT": "boolean operation",
-            # "ANY OF": "boolean operation",
-            # "ALL OF": "boolean operation",
-            # "BOTH SAEM": "comparison operation",
-            # "DIFFRINT": "comparison operation",
-            # "SMOOSH": "concantenation operaion",
-            # "MAEK": "typecasting keyword",
-            # "\bA\b": "[temp] placeholder",
-            # "IS NOW A": "[temp] placeholder",
-            # "VISIBLE": "output keyword",
-            # "GIMMEH": "input keyword",
-            # "O RLY\?": "if-then statement keyword",
-            # "YA RLY": "flow-control statement delimeter",
-            # "MEBBE": "else-if statement keyword",
-            # "NO WAI": "[temp] placeholder",
-            # "OIC": "[temp] placeholder",
-            # "WTF\?": "[temp] placeholder",
-            # "OMG": "[temp] placeholder",
-            # "OMGTWF": "[temp] placeholder",
-            # "IM IN YR": "[temp] placeholder",
-            # "UPPIN": "[temp] placeholder", 
-            # "NERFIN": "[temp] placeholder", 
-            # "YR": "[temp] placeholder",
-            # "TIL": "[temp] placeholder",
-            # "WILE": "[temp] placeholder",
-            # "IM OUTTA YR": "[temp] placeholder",
-            # "I HAS A ([a-zA-Z]\w*)": "variable identifier",
-            # "IM IN YR ([a-zA-Z]\w*)": "loop identifier",
+            r"^HAI$": "code delimiter",
+            r"^KTHXBYE$": "code delimiter",
+            r"^BTW$": "comment keyword",
+            r"^OBTW$": "multiline comment delimiter",
+            r"^TLDR$": "multiline comment delimiter",
+            r"^I HAS A$": "variable declaration",
+            r"^ITZ$": "variable assignment",
+            r"^R$": "variable assignment",
+            r"^SUM OF$": "arithemtic operation",
+            r"^DIFF OF$": "arithemtic operation",
+            r"^PRODUKT OF$": "arithemtic operation",
+            r"^QUOSHUNT OF$": "arithemtic operation",
+            r"^MOD OF$": "arithemtic operation",
+            r"^BIGGR OF$": "arithemtic operation",
+            r"^SMALLR$": "arithemtic operation",
+            r"^BOTH OF$": "boolean operation",
+            r"^EITHER OF$": "boolean operation",
+            r"^WON OF$": "boolean operation",
+            r"^NOT$": "boolean operation",
+            r"^ANY OF$": "boolean operation",
+            r"^ALL OF$": "boolean operation",
+            r"^BOTH SAEM$": "comparison operation",
+            r"^DIFFRINT$": "comparison operation",
+            r"^SMOOSH$": "concantenation operaion",
+            r"^MAEK$": "typecasting keyword",
+            r"^A$": "[temp] placeholder",
+            r"^IS NOW A$": "[temp] placeholder",
+            r"^VISIBLE$": "output keyword",
+            r"^GIMMEH$": "input keyword",
+            r"^O RLY\?$": "if-then statement keyword",
+            r"^YA RLY$": "flow-control statement delimeter",
+            r"^MEBBE$": "else-if statement keyword",
+            r"^NO WAI$": "[temp] placeholder",
+            r"^OIC$": "[temp] placeholder",
+            r"^WTF\?$": "[temp] placeholder",
+            r"^OMG$": "[temp] placeholder",
+            r"^OMGTWF$": "[temp] placeholder",
+            r"^IM IN YR$": "[temp] placeholder",
+            r"^UPPIN$": "[temp] placeholder",
+            r"^NERFIN$": "[temp] placeholder",
+            r"^YR$": "[temp] placeholder",
+            r"^TIL$": "[temp] placeholder",
+            r"^WILE$": "[temp] placeholder",
+            r"^IM OUTTA YR$": "[temp] placeholder",
+            # r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
+            # r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
         }
         self.allPatterns = dict.keys(self.patternTypes)
 
     def process(self, content):
-        self.tokenize(content)
+        content = self._removeIndents(content)
+        self._tokenize(content)
 
-    def tokenize(self, content):
-        lexemes = re.findall("|".join(self.allPatterns), content)
-        print(lexemes)
-        for lexeme in lexemes:
-            lexemeType = self.getLexemeType(lexeme)
-            token = Token(lexeme, lexemeType)
-            self.lexemes.append(token)
+    def _removeIndents(self, content):
+        return re.sub(r"\t", "", content)
 
-    def getLexemeType(self, lexeme):
+    def _tokenize(self, content):
+        for line in content.split("\n"):
+            string = ""
+            lineIndex = 0
+            while lineIndex < len(line):
+                string += line[lineIndex]
+                lexemeType = self._getLexemeType(string)
+
+                lineIndex += 1
+
+                if lexemeType != None:
+                    # skip space after lexeme
+                    lineIndex += 1
+
+                    token = Token(string, lexemeType)
+                    self.lexemes.append(token)
+
+                    string = ""
+
+            # if string != "":
+            #     print("Syntax error")
+            #     break
+
+    def _getLexemeType(self, lexeme):
         for pattern in self.allPatterns:
-            if re.match(f"^{pattern}$", lexeme):
+            if re.match(f"{pattern}", lexeme):
                 lexemeType = self.patternTypes[pattern]
                 return lexemeType
+        return None
 
 
 def main():
     interpreter = Interpreter()
 
-    # sample code reference
-    # https://www.tutorialspoint.com/lolcode/lolcode_some_more_examples.htm
     interpreter.process(
         """
-HAI 1.2
-HOW IZ I POWERTWO YR NUM
-    BTW RETURN 1 IF 2 TO POWER OF 0
-    BOTH SAEM NUM AN 0, O RLY?
-        YA RLY, FOUND YR 1
-    OIC
+HAI
+\tI HAS A var
+\tI HAS A one ITZ 1
+\tvar R SUM OF one AN 2
+\tVISIBLE var
 
-    BTW CALCULATE 2 TO POWER OF NUM
-    I HAS A INDEX ITZ 0
-    I HAS A TOTAL ITZ 1
-    IM IN YR LOOP UPPIN YR INDEX TIL BOTH SAEM INDEX AN NUM
-        TOTAL R PRODUKT OF TOTAL AN 2
-    IM OUTTA YR LOOP
+\tI HAS A h ITZ "Meow"
+\tI HAS A dyM ITZ " "
+\tI HAS A ny ITZ "world!!" 
+\tVISIBLE SMOOSH h AN dyM AN ny
 
-    FOUND YR TOTAL
-    IF U SAY SO
-    BTW OUTPUT: 8
-    VISIBLE I IZ POWERTWO YR 4 MKAY
+\tVISIBLE BOTH OF WIN AN FAIL
+\tVISIBLE ANY OF WIN AN FAIL AN FAIL MKAY
+
+\tVISIBLE DIFFRINT 4 AN 5
+
+\tMAEK one YARN
+\tVISIBLE one
+
+\tFAIL
+\tO RLY? 
+\t\tYA RLY
+\t\t\tVISIBLE ":)"
+\t\tNO WAI
+\t\t\tVISIBLE ":("
+\tOIC
+
+\tIT R "b"
+\tWTF?
+\tOMG "a"
+\t\tVISIBLE "it's a"
+\tOMG "b"
+\t\tVISIBLE "it's b"
+\tOMG "c"
+\t\tVISIBLE "it's c"
+\tOMGWTF
+\t\tVISIBLE "it's something else"
+\tOIC
+
+\tI HAS A index ITZ 0
+\tIM IN YR hous UPPIN YR index TIL BOTH SAEM index AN 5
+\t\tVISIBLE SMOOSH "iteration " AN index
+\tIM OUTTA YR hous
 KTHXBYE
 """
     )
