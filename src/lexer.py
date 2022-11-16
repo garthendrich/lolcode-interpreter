@@ -225,34 +225,105 @@ class Lexer:
     def _tokenize(self, content):
         for line in content.split("\n"):
             string = ""
+            next = None
             for word in line.split():
                 string += word
-                lexemeType = self._getLexemeType(string)
 
-                if lexemeType != None:
-                    token = Token(string, lexemeType)
-                    self.lexemes.append(token)
-
-                    #mema to pre HAHHAHAHAHA ayusin mo na lang
-                    if(token.lexemeType == 'variable declaration' and len(line.split()) > 3):
-                        string += " "
-                    elif(token.lexemeType == 'loop declaration'):
-                        string += " "
-                    else:
+                if next == STATEMENT_TYPE.function_identifier:
+                    token = self._getMatchedIdentifierToken(
+                        string, "function identifier"
+                    )
+                    if token is not None:
+                        self.lexemes.append(token)
                         string = ""
+                        next = None
+                    else:
+                        print(f"Syntax error {string}")
 
-                else:
+                    continue
+
+                if next == STATEMENT_TYPE.loop_identifier:
+                    token = self._getMatchedIdentifierToken(string, "loop identifier")
+                    if token is not None:
+                        self.lexemes.append(token)
+                        string = ""
+                        next = None
+                    else:
+                        print(f"Syntax error {string}")
+
+                    continue
+
+                if next == STATEMENT_TYPE.variable_identifier:
+                    token = self._getMatchedIdentifierToken(
+                        string, "variable identifier"
+                    )
+                    if token is not None:
+                        self.lexemes.append(token)
+                        string = ""
+                        next = None
+                    else:
+                        print(f"Syntax error {string}")
+
+                    continue
+
+                if next == STATEMENT_TYPE.expression:
+                    token = self._getMatchedIdentifierToken(
+                        string, "variable identifier"
+                    )
+                    if token is not None:
+                        self.lexemes.append(token)
+                        string = ""
+                        next = None
+                        continue
+
+                    lexemeData = self._getMatchedLiteralData(string)
+                    if lexemeData is None:
+                        # print(f"Syntax error {string}")
+                        pass
+                    else:
+                        lexemeType = lexemeData["lexemeType"]
+                        token = Token(string, lexemeType)
+                        self.lexemes.append(token)
+                        string = ""
+                        continue
+
+                lexemeData = self._findMatchedLexemeData(string)
+
+                if lexemeData == None:
                     string += " "
+                    continue
+
+                lexemeType = lexemeData["lexemeType"]
+                token = Token(string, lexemeType)
+                self.lexemes.append(token)
+
+                next = lexemeData["next"]
+
+                string = ""
 
             # if string != "":
             #      print("Syntax error")
             #      break
 
-    def _getLexemeType(self, lexeme):
-        allPatterns = dict.keys(self.patternTypes)
+    def _findMatchedLexemeData(self, string):
+        allPatterns = dict.keys(self.patternsData)
         for pattern in allPatterns:
-            if re.match(pattern, lexeme):
-                lexemeType = self.patternTypes[pattern]
+            if re.match(pattern, string):
+                lexemeType = self.patternsData[pattern]
+                return lexemeType
+        return None
+
+    def _getMatchedIdentifierToken(self, string, lexemeType):
+        if re.match("^[a-zA-Z]\w*$", string):
+            return Token(string, lexemeType)
+
+        return None
+
+    def _getMatchedLiteralData(self, string):
+        allLiteralPatterns = dict.keys(self.literalPatternsData)
+        for pattern in allLiteralPatterns:
+            if re.match(pattern, string):
+                lexemeType = self.literalPatternsData[pattern]
                 return lexemeType
         return None
 
