@@ -49,14 +49,15 @@ class Lexer:
             r"^TIL$": "[temp] placeholder",
             r"^WILE$": "[temp] placeholder",
             r"^IM OUTTA YR$": "[temp] placeholder",
-            r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
-            r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
-            r"^-?(\d+.\d*|\d*.\d+)$" : "float literal",
+            r"(?<=^I HAS A )[a-zA-Z]\w*$": "variable identifier",
+            r"(?<=^IM IN YR )[a-zA-Z]\w*$": "loop identifier",
+            r"^-?\d*.\d+$" : "float literal",
             r"^-?\d+$" : "integer literal",
-            r"\".*\"" : "string literal",
+            r"^\".*\"$" : "string literal",
+            r"^(WIN|FAIL)$" : "bool literal", 
         }
 
-    def process(self, content):
+    def process(self, content): 
         content = self._removeIndents(content)
         self._tokenize(content)
 
@@ -70,6 +71,7 @@ class Lexer:
                 string += word
                 lexemeType = self._getLexemeType(string)
 
+                # print(string + " = " + str(lexemeType))
                 if lexemeType != None:
                     token = Token(string, lexemeType)
                     self.lexemes.append(token)
@@ -81,7 +83,6 @@ class Lexer:
                         string += " "
                     else:
                         string = ""
-
                 else:
                     string += " "
 
@@ -92,9 +93,10 @@ class Lexer:
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)
         for pattern in allPatterns:
-            if re.match(pattern, lexeme):
+            found_lexeme = re.search(pattern, lexeme)
+            if found_lexeme:
                 lexemeType = self.patternTypes[pattern]
-                return lexemeType
+                return (lexemeType, found_lexeme.group())
         return None
 
 
