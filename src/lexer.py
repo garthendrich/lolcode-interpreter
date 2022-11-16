@@ -217,7 +217,8 @@ class Lexer:
 
     def process(self, content):
         content = self._removeIndents(content)
-        self._tokenize(content)
+        return self._tokenize(content)
+        #self._tokenize(content)
 
     def _removeIndents(self, content):
         return re.sub(r"\t", "", content)
@@ -301,9 +302,11 @@ class Lexer:
 
                 string = ""
 
-            # if string != "":
-            #      print("Syntax error")
-            #      break
+            if string != "":
+                #return ("Syntax error " + string)
+                pass
+        
+        return "SUCCESS"        
 
     def _findMatchedLexemeData(self, string):
         allPatterns = dict.keys(self.patternsData)
