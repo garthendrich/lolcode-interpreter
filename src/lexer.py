@@ -50,8 +50,6 @@ class Lexer:
             r"^TIL$": "loop condition keyword",
             r"^WILE$": "loop condition keyword",
             r"^IM OUTTA YR$": "loop delimiter",
-            r"(?<=^I HAS A )[a-zA-Z]\w*$": "variable identifier",
-            r"(?<=^IM IN YR )[a-zA-Z]\w*$": "loop identifier",
             r"^-?\d*.\d+$" : "float literal",
             r"^-?\d+$" : "integer literal",
             r"^\".*\"$" : "string literal",
@@ -68,36 +66,41 @@ class Lexer:
     def _tokenize(self, content):
         for line in content.split("\n"):
             string = ""
-            for word in line.split():
-                string += word
-                lexemeType = self._getLexemeType(string)
+            wordList = line.split() #list of words
+            
+            while True:
+                for word in wordList:
+                    string += word
+                    lexemeType = self._getLexemeType(string)
 
-                # print(string + " = " + str(lexemeType))
-                if lexemeType != None:
-                    token = Token(string, lexemeType)
-                    self.lexemes.append(token)
-
-                    #mema to pre HAHHAHAHAHA ayusin mo na lang
-                    if(token.lexemeType == 'variable declaration' and len(line.split()) > 3):
-                        string += " "
-                    elif(token.lexemeType == 'loop declaration'):
-                        string += " "
-                    else:
+                    # print(string + " = " + str(lexemeType))
+                    if lexemeType != None:
+                        token = Token(string, lexemeType)
+                        self.lexemes.append(token)
                         string = ""
-                else:
-                    string += " "
+                    else:
+                        string += " "
 
-            # if string != "":
-            #      print("Syntax error")
-            #      break
+                if string != "":
+                    wordList = string.split()
+                    if re.match(r"^[a-zA-Z]\w*$", wordList[0]):
+                        lexemeType = "identifier"
+                        token = Token(wordList[0], lexemeType)
+                        self.lexemes.append(token)
+                        wordList.pop(0)
+                        string = ""
+                    else:
+                        print("Syntax error: " + string)
+                        break
+                else:
+                    break
 
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)
         for pattern in allPatterns:
-            found_lexeme = re.search(pattern, lexeme)
-            if found_lexeme:
+            if re.match(pattern, lexeme):
                 lexemeType = self.patternTypes[pattern]
-                return (lexemeType, found_lexeme.group())
+                return lexemeType
         return None
 
 
