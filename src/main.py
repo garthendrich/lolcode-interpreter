@@ -33,9 +33,9 @@ class Interpreter:
 
     def processText(self):
         input_text = self.textEditor.getInputFromTextEditor()
-
         lexer = Lexer()
 
+        self.table_lexemes.clearTable()
         status = lexer.process(input_text)
         if status == "SUCCESS":
             self.table_lexemes.insertObjectList(lexer.lexemes)
@@ -94,6 +94,9 @@ class Table:
     def insertObjectList(self, object_list):
         for token_object in object_list:
             self.addData((token_object.lexeme, token_object.lexemeType))
+
+    def clearTable(self):
+        self.table.delete(*self.table.get_children())
 
 main()
 #References
