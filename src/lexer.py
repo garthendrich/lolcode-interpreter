@@ -69,10 +69,12 @@ class Lexer:
     def _tokenizeSourceCode(self, sourceCode):
         for lineIndex, line in enumerate(sourceCode.split("\n")):
             self.currentLineNumber = lineIndex + 1
-            self._tokenizeLine(line)
+            self.currentLine = line
+            self.currentLineColumnNumber = 0
+            self._tokenizeCurrentLine()
 
-    def _tokenizeLine(self, line):
-        words = line.split()
+    def _tokenizeCurrentLine(self):
+        words = self.currentLine.split()
 
         buffer = ""
         previousLexemeType = None
@@ -88,7 +90,9 @@ class Lexer:
                 if lexemeType != None:
                     self.lexemes.append(Token(buffer, lexemeType))
                     previousLexemeType = lexemeType
+
                     buffer = ""
+                    self.currentLineColumnNumber += len(buffer)
 
             if buffer == "":
                 break
@@ -96,19 +100,27 @@ class Lexer:
             possibleIdentifier, *words = buffer.split()
 
             if not self._isIdentifier(possibleIdentifier):
-                raise SyntaxError(
-                    "Unexpected token",
-                    (None, self.currentLineNumber, None, possibleIdentifier),
-                )
+                self._throwSyntaxError("Unexpected token")
 
             identifier = possibleIdentifier
 
             identifierLexemeType = self._getIdentifierTypeBasedOn(previousLexemeType)
 
             self.lexemes.append(Token(identifier, identifierLexemeType))
+            self.currentLineColumnNumber += len(identifier) + 1
             previousLexemeType = identifierLexemeType
 
             buffer = ""
+
+    def _throwSyntaxError(self, message):
+        syntaxErrorArgs = (
+            None,
+            self.currentLineNumber,
+            self.currentLineColumnNumber,
+            self.currentLine,
+        )
+
+        raise SyntaxError(message, syntaxErrorArgs)
 
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)
@@ -162,7 +174,7 @@ class Lexer:
         if previousLexemeType in loopIdentifierPrecedingLexemeTypes:
             return "loop identifier"
 
-        raise SyntaxError("Unexpected token", (None, self.currentLineNumber, None, ""))
+        self._throwSyntaxError("Unexpected token")
 
 
 class Token:

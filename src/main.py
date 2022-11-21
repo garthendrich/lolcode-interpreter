@@ -53,9 +53,10 @@ class Interpreter:
         try:
             lexer.process(input_text)
             self.table_lexemes.insertObjectList(lexer.lexemes)
-            status = "Success"
+            status = ""
         except SyntaxError as error:
-            status = f"\nline {error.lineno}\n{error.msg}: {error.text}"
+            errorArrowIndenter = (error.offset or 0) * " "
+            status = f"\nline {error.lineno}:\n{error.text}\n{errorArrowIndenter}^\n{error.msg}"
 
         self.console.outputResult("> " + status + "\n")
 
