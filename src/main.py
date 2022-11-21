@@ -35,10 +35,12 @@ class Interpreter:
         input_text = self.textEditor.getInputFromTextEditor()
 
         lexer = Lexer()
-        lexer.process(input_text)
-        self.table_lexemes.insertObjectList(lexer.lexemes)
 
-        self.console.outputResult(input_text)
+        status = lexer.process(input_text)
+        if status == "SUCCESS":
+            self.table_lexemes.insertObjectList(lexer.lexemes)
+
+        self.console.outputResult("> " + status + "\n")
 
 class TextEditor:
     def __init__(self, frame):

@@ -53,21 +53,24 @@ class Lexer:
             r"^-?\d*.\d+$" : "float literal",
             r"^-?\d+$" : "integer literal",
             r"^\".*\"$" : "string literal",
-            r"^(WIN|FAIL)$" : "bool literal", 
+            r"^(WIN|FAIL)$" : "bool literal",
+            r"^(NOOB|NUMBR|NUMBAR|YARN|TROOF)$" : "type literal",
         }
 
     def process(self, content): 
         content = self._removeIndents(content)
-        self._tokenize(content)
+        return self._tokenize(content)
 
     def _removeIndents(self, content):
         return re.sub(r"\t", "", content)
 
     def _tokenize(self, content):
+        lineNo = 0
         for line in content.split("\n"):
             string = ""
             wordList = line.split() #list of words
-            
+            previousType = None
+            lineNo += 1
             while True:
                 for word in wordList:
                     string += word
@@ -77,27 +80,32 @@ class Lexer:
                     if lexemeType != None:
                         token = Token(string, lexemeType)
                         self.lexemes.append(token)
+                        previousType = lexemeType
                         string = ""
                     else:
                         string += " "
 
                 if string != "":
                     wordList = string.split()
-                    if re.match(r"^[a-zA-Z]\w*$", wordList[0]):
-                        if self.lexemes[len(self.lexemes) - 1].lexemeType in ["loop declaration and delimeter", "loop delimiter"]:
+                    #checks if previous keyword is part of all patterns or none; none considers the variable being the first lexeme in the line (found in variable assignments)
+                    #can be made more specific if allPatterns list are list of keywords where identifiers can be found.
+                    if re.match(r"^[a-zA-Z]\w*$", wordList[0]) and (previousType not in ["loop identifier", "variable identifier"] or previousType == None):
+                        if previousType in ["loop declaration and delimeter", "loop delimiter"]:
                             lexemeType = "loop identifier"
                         else:
                             lexemeType = "variable identifier"
 
                         token = Token(wordList[0], lexemeType)
                         self.lexemes.append(token)
+                        previousType = lexemeType
                         wordList.pop(0)
                         string = ""
+
                     else:
-                        print("Syntax error: " + string)
-                        break
+                        return ("Syntax error: " + string + "in line " + str(lineNo))
                 else:
                     break
+        return "SUCCESS"
 
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)
