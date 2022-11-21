@@ -1,5 +1,6 @@
 import re
 
+
 class Lexer:
     def __init__(self):
         self.lexemes = []
@@ -50,14 +51,14 @@ class Lexer:
             r"^TIL$": "loop condition keyword",
             r"^WILE$": "loop condition keyword",
             r"^IM OUTTA YR$": "loop delimiter",
-            r"^-?\d*.\d+$" : "float literal",
-            r"^-?\d+$" : "integer literal",
-            r"^\".*\"$" : "string literal",
-            r"^(WIN|FAIL)$" : "bool literal",
-            r"^(NOOB|NUMBR|NUMBAR|YARN|TROOF)$" : "type literal",
+            r"^-?\d*.\d+$": "float literal",
+            r"^-?\d+$": "integer literal",
+            r"^\".*\"$": "string literal",
+            r"^(WIN|FAIL)$": "bool literal",
+            r"^(NOOB|NUMBR|NUMBAR|YARN|TROOF)$": "type literal",
         }
 
-    def process(self, content): 
+    def process(self, content):
         content = self._removeIndents(content)
         return self._tokenize(content)
 
@@ -68,7 +69,7 @@ class Lexer:
         lineNo = 0
         for line in content.split("\n"):
             string = ""
-            wordList = line.split() #list of words
+            wordList = line.split()  # list of words
             previousType = None
             lineNo += 1
             while True:
@@ -87,10 +88,16 @@ class Lexer:
 
                 if string != "":
                     wordList = string.split()
-                    #checks if previous keyword is part of all patterns or none; none considers the variable being the first lexeme in the line (found in variable assignments)
-                    #can be made more specific if allPatterns list are list of keywords where identifiers can be found.
-                    if re.match(r"^[a-zA-Z]\w*$", wordList[0]) and (previousType not in ["loop identifier", "variable identifier"] or previousType == None):
-                        if previousType in ["loop declaration and delimeter", "loop delimiter"]:
+                    # checks if previous keyword is part of all patterns or none; none considers the variable being the first lexeme in the line (found in variable assignments)
+                    # can be made more specific if allPatterns list are list of keywords where identifiers can be found.
+                    if re.match(r"^[a-zA-Z]\w*$", wordList[0]) and (
+                        previousType not in ["loop identifier", "variable identifier"]
+                        or previousType == None
+                    ):
+                        if previousType in [
+                            "loop declaration and delimeter",
+                            "loop delimiter",
+                        ]:
                             lexemeType = "loop identifier"
                         else:
                             lexemeType = "variable identifier"
