@@ -1,5 +1,6 @@
 import re
 
+
 class Lexer:
     def __init__(self):
         self.lexemes = []
@@ -50,11 +51,11 @@ class Lexer:
             r"^TIL$": "loop condition keyword",
             r"^WILE$": "loop condition keyword",
             r"^IM OUTTA YR$": "loop delimiter",
-            r"^-?\d*.\d+$" : "float literal",
-            r"^-?\d+$" : "integer literal",
-            r"^\".*\"$" : "string literal",
-            r"^(WIN|FAIL)$" : "bool literal",
-            r"^(NOOB|NUMBR|NUMBAR|YARN|TROOF)$" : "type literal",
+            r"^-?\d*.\d+$": "float literal",
+            r"^-?\d+$": "integer literal",
+            r"^\".*\"$": "string literal",
+            r"^(WIN|FAIL)$": "bool literal",
+            r"^(NOOB|NUMBR|NUMBAR|YARN|TROOF)$": "type literal",
         }
 
     def process(self, content):
