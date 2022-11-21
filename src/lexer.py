@@ -33,6 +33,7 @@ class Lexer:
             r"^MAEK$": "explicit typecasting keyword",
             r"^A$": "optional A keyword",
             r"^AN$": "operand seperator",
+            r"^MKAY$": "infinite arity delimiter",
             r"^IS NOW A$": "re-casting keyword",
             r"^VISIBLE$": "output keyword",
             r"^GIMMEH$": "input keyword",
@@ -121,15 +122,47 @@ class Lexer:
         return re.match(r"^[a-zA-Z]\w*$", word)
 
     def _getIdentifierTypeBasedOn(self, previousLexemeType):
-        if previousLexemeType in ["loop identifier", "variable identifier"]:
-            raise SyntaxError(
-                "Unexpected token", (None, self.currentLineNumber, None, "")
-            )
+        variableIdentifierPrecedingLexemeTypes = [
+            "variable declaration",
+            "variable assignment",
+            "addition operation",
+            "subtraction operation",
+            "multiplication operation",
+            "quotient operation",
+            "modulo operation",
+            "max operation",
+            "min operation",
+            "and operation",
+            "or operation",
+            "xor operation",
+            "not operation",
+            "infinite arity and operation",
+            "infinite arity or operation",
+            "equal to operation",
+            "not equal to operation",
+            "concantenation operaion",
+            "explicit typecasting keyword",
+            "operand seperator",
+            "output keyword",
+            "input keyword",
+            "case keyword",
+            "keyword in loop",
+            "loop condition keyword",
+        ]
 
-        if previousLexemeType in ["loop declaration and delimeter", "loop delimiter"]:
+        loopIdentifierPrecedingLexemeTypes = [
+            "loop declaration and delimeter",
+            "loop delimiter",
+        ]
+
+        if previousLexemeType == None:
+            return "variable identifier"
+        if previousLexemeType in variableIdentifierPrecedingLexemeTypes:
+            return "variable identifier"
+        if previousLexemeType in loopIdentifierPrecedingLexemeTypes:
             return "loop identifier"
 
-        return "variable identifier"
+        raise SyntaxError("Unexpected token", (None, self.currentLineNumber, None, ""))
 
 
 class Token:
