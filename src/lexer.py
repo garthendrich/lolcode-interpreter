@@ -84,7 +84,11 @@ class Lexer:
                 if string != "":
                     wordList = string.split()
                     if re.match(r"^[a-zA-Z]\w*$", wordList[0]):
-                        lexemeType = "identifier"
+                        if self.lexemes[len(self.lexemes) - 1].lexemeType in ["loop declaration and delimeter", "loop delimiter"]:
+                            lexemeType = "loop identifier"
+                        else:
+                            lexemeType = "variable identifier"
+
                         token = Token(wordList[0], lexemeType)
                         self.lexemes.append(token)
                         wordList.pop(0)
