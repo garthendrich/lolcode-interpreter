@@ -88,33 +88,25 @@ class Lexer:
                     previousLexemeType = lexemeType
                     buffer = ""
 
-            if buffer != "":
-                words = buffer.split()
-                if re.match(r"^[a-zA-Z]\w*$", words[0]) and (
-                    previousLexemeType not in ["loop identifier", "variable identifier"]
-                    or previousLexemeType == None
-                ):
-                    if previousLexemeType in [
-                        "loop declaration and delimeter",
-                        "loop delimiter",
-                    ]:
-                        lexemeType = "loop identifier"
-                    else:
-                        lexemeType = "variable identifier"
+            if buffer == "":
+                break
 
-                    self.lexemes.append(Token(words[0], lexemeType))
-                    previousLexemeType = lexemeType
+            possibleIdentifier, *words = buffer.split()
 
-                    words.pop(0)
-                    buffer = ""
-
-                    continue
-
+            if not self._isIdentifier(possibleIdentifier):
                 raise SyntaxError(
-                    "Unexpected token", (None, self.currentLineNumber, None, buffer)
+                    "Unexpected token",
+                    (None, self.currentLineNumber, None, possibleIdentifier),
                 )
 
-            isLineTokenized = True
+            identifier = possibleIdentifier
+
+            identifierLexemeType = self._getIdentifierTypeBasedOn(previousLexemeType)
+
+            self.lexemes.append(Token(identifier, identifierLexemeType))
+            previousLexemeType = identifierLexemeType
+
+            buffer = ""
 
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)
@@ -123,6 +115,20 @@ class Lexer:
                 lexemeType = self.patternTypes[pattern]
                 return lexemeType
         return None
+
+    def _isIdentifier(self, word):
+        return re.match(r"^[a-zA-Z]\w*$", word)
+
+    def _getIdentifierTypeBasedOn(self, previousLexemeType):
+        if previousLexemeType in ["loop identifier", "variable identifier"]:
+            raise SyntaxError(
+                "Unexpected token", (None, self.currentLineNumber, None, "")
+            )
+
+        if previousLexemeType in ["loop declaration and delimeter", "loop delimiter"]:
+            return "loop identifier"
+
+        return "variable identifier"
 
 
 class Token:
