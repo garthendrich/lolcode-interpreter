@@ -36,9 +36,13 @@ class Interpreter:
         lexer = Lexer()
 
         self.table_lexemes.clearTable()
-        status = lexer.process(input_text)
-        if status == "SUCCESS":
+
+        try:
+            lexer.process(input_text)
             self.table_lexemes.insertObjectList(lexer.lexemes)
+            status = "Success"
+        except SyntaxError as error:
+            status = f"\nline {error.lineno}\n{error.msg}: {error.text}"
 
         self.console.outputResult("> " + status + "\n")
 

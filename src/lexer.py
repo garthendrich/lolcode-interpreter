@@ -102,7 +102,9 @@ class Lexer:
                         string = ""
 
                     else:
-                        return ("Syntax error: " + string + "in line " + str(lineNo))
+                        raise SyntaxError(
+                            "Unexpected token", (None, lineNo, None, string)
+                        )
                 else:
                     break
         return "SUCCESS"
