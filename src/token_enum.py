@@ -1,4 +1,4 @@
-class STATEMENT:
+class TOKEN:
     CODE_DELIMITER = "code delimiter"
     COMMENT_KEYWORD = "comment keyword"
     MULTILINE_COMMENT_DELIMITER = "multiline comment delimiter"
