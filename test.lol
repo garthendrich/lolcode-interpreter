@@ -1,5 +1,5 @@
 HAI
-	I HAS A var
+	I HAAS A var
 	I HAS A one ITZ 1
 	var R SUM OF one AN 2
 	VISIBLE var

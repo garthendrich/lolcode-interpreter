@@ -1,93 +1,128 @@
 import re
 
+from statement_enum import STATEMENT
+
+
 class Lexer:
     def __init__(self):
         self.lexemes = []
 
         self.patternTypes = {
-            r"^HAI$": "code delimiter",
-            r"^KTHXBYE$": "code delimiter",
-            r"^BTW$": "comment keyword",
-            r"^OBTW$": "multiline comment delimiter",
-            r"^TLDR$": "multiline comment delimiter",
-            r"^I HAS A$": "variable declaration",
-            r"^ITZ$": "variable assignment",
-            r"^R$": "variable assignment",
-            r"^SUM OF$": "arithemtic operation",
-            r"^DIFF OF$": "arithemtic operation",
-            r"^PRODUKT OF$": "arithemtic operation",
-            r"^QUOSHUNT OF$": "arithemtic operation",
-            r"^MOD OF$": "arithemtic operation",
-            r"^BIGGR OF$": "arithemtic operation",
-            r"^SMALLR$": "arithemtic operation",
-            r"^BOTH OF$": "boolean operation",
-            r"^EITHER OF$": "boolean operation",
-            r"^WON OF$": "boolean operation",
-            r"^NOT$": "boolean operation",
-            r"^ANY OF$": "boolean operation",
-            r"^ALL OF$": "boolean operation",
-            r"^BOTH SAEM$": "comparison operation",
-            r"^DIFFRINT$": "comparison operation",
-            r"^SMOOSH$": "concantenation operaion",
-            r"^MAEK$": "typecasting keyword",
-            r"^A$": "[temp] placeholder",
-            r"^IS NOW A$": "[temp] placeholder",
-            r"^VISIBLE$": "output keyword",
-            r"^GIMMEH$": "input keyword",
-            r"^O RLY\?$": "if-then statement keyword",
-            r"^YA RLY$": "flow-control statement delimeter",
-            r"^MEBBE$": "else-if statement keyword",
-            r"^NO WAI$": "[temp] placeholder",
-            r"^OIC$": "[temp] placeholder",
-            r"^WTF\?$": "[temp] placeholder",
-            r"^OMG$": "[temp] placeholder",
-            r"^OMGTWF$": "[temp] placeholder",
-            r"^IM IN YR$": "loop declaration",
-            r"^UPPIN$": "[temp] placeholder",
-            r"^NERFIN$": "[temp] placeholder",
-            r"^YR$": "[temp] placeholder",
-            r"^TIL$": "[temp] placeholder",
-            r"^WILE$": "[temp] placeholder",
-            r"^IM OUTTA YR$": "[temp] placeholder",
-            r"^I HAS A [a-zA-Z]\w*$": "variable identifier",
-            r"^IM IN YR [a-zA-Z]\w*$": "loop identifier",
-            r"^-?(\d+.\d*|\d*.\d+)$" : "float literal",
-            r"^-?\d+$" : "integer literal",
-            r"\".*\"" : "string literal",
+            r"^HAI$": STATEMENT.CODE_DELIMITER,
+            r"^KTHXBYE$": STATEMENT.CODE_DELIMITER,
+            r"^BTW$": STATEMENT.COMMENT_KEYWORD,
+            r"^OBTW$": STATEMENT.MULTILINE_COMMENT_DELIMITER,
+            r"^TLDR$": STATEMENT.MULTILINE_COMMENT_DELIMITER,
+            r"^I HAS A$": STATEMENT.VARIABLE_DECLARATION,
+            r"^ITZ$": STATEMENT.VARIABLE_ASSIGNMENT,
+            r"^R$": STATEMENT.VARIABLE_ASSIGNMENT,
+            r"^SUM OF$": STATEMENT.ADDITION_OPERATION,
+            r"^DIFF OF$": STATEMENT.SUBTRACTION_OPERATION,
+            r"^PRODUKT OF$": STATEMENT.MULTIPLICATION_OPERATION,
+            r"^QUOSHUNT OF$": STATEMENT.QUOTIENT_OPERATION,
+            r"^MOD OF$": STATEMENT.MODULO_OPERATION,
+            r"^BIGGR OF$": STATEMENT.MAX_OPERATION,
+            r"^SMALLR$": STATEMENT.MIN_OPERATION,
+            r"^BOTH OF$": STATEMENT.AND_OPERATION,
+            r"^EITHER OF$": STATEMENT.OR_OPERATION,
+            r"^WON OF$": STATEMENT.XOR_OPERATION,
+            r"^NOT$": STATEMENT.NOT_OPERATION,
+            r"^ANY OF$": STATEMENT.INFINITE_ARITY_AND_OPERATION,
+            r"^ALL OF$": STATEMENT.INFINITE_ARITY_OR_OPERATION,
+            r"^BOTH SAEM$": STATEMENT.EQUAL_TO_OPERATION,
+            r"^DIFFRINT$": STATEMENT.NOT_EQUAL_TO_OPERATION,
+            r"^SMOOSH$": STATEMENT.CONCATENATION_OPERATION,
+            r"^MAEK$": STATEMENT.EXPLICIT_TYPECASTING_KEYWORD,
+            r"^A$": STATEMENT.OPTIONAL_A_KEYWORD,
+            r"^AN$": STATEMENT.OPERAND_SEPARATOR,
+            r"^MKAY$": STATEMENT.INFINITE_ARITY_DELIMITER,
+            r"^IS NOW A$": STATEMENT.RECASTING_KEYWORD,
+            r"^VISIBLE$": STATEMENT.OUTPUT_KEYWORD,
+            r"^GIMMEH$": STATEMENT.INPUT_KEYWORD,
+            r"^O RLY\?$": STATEMENT.IF_ELSE_DELIMITER,
+            r"^YA RLY$": STATEMENT.IF_STATEMENT_KEYWORD,
+            r"^MEBBE$": STATEMENT.ELSE_IF_STATEMENT_KEYWORD,
+            r"^NO WAI$": STATEMENT.ELSE_STATEMENT_KEYWORD,
+            r"^OIC$": STATEMENT.FLOW_CONTROL_STATEMENTS_DELIMITER,
+            r"^WTF\?$": STATEMENT.SWITCH_CASE_STATEMENT_DELIMITER,
+            r"^OMG$": STATEMENT.CASE_KEYWORD,
+            r"^OMGTWF$": STATEMENT.DEFAULT_CASE_KEYWORD,
+            r"^IM IN YR$": STATEMENT.LOOP_DECLARATION_AND_DELIMITER,
+            r"^UPPIN$": STATEMENT.INCREMENT_KEYWORD,
+            r"^NERFIN$": STATEMENT.DECREMENT_KEYWORD,
+            r"^YR$": STATEMENT.KEYWORD_IN_LOOP,
+            r"^TIL$": STATEMENT.LOOP_CONDITION_KEYWORD,
+            r"^WILE$": STATEMENT.LOOP_CONDITION_KEYWORD,
+            r"^IM OUTTA YR$": STATEMENT.LOOP_DELIMITER,
+            r"^-?\d*.\d+$": STATEMENT.FLOAT_LITERAL,
+            r"^-?\d+$": STATEMENT.INTEGER_LITERAL,
+            r"^\".*\"$": STATEMENT.STRING_LITERAL,
+            r"^(WIN|FAIL)$": STATEMENT.BOOL_LITERAL,
+            r"^(NOOB|NUMBR|NUMBAR|YARN|TROOF)$": STATEMENT.TYPE_LITERAL,
         }
 
     def process(self, content):
         content = self._removeIndents(content)
-        self._tokenize(content)
+        return self._tokenizeSourceCode(content)
 
     def _removeIndents(self, content):
         return re.sub(r"\t", "", content)
 
-    def _tokenize(self, content):
-        for line in content.split("\n"):
-            string = ""
-            for word in line.split():
-                string += word
-                lexemeType = self._getLexemeType(string)
+    def _tokenizeSourceCode(self, sourceCode):
+        for lineIndex, line in enumerate(sourceCode.split("\n")):
+            self.currentLineNumber = lineIndex + 1
+            self.currentLine = line
+            self.currentLineColumnNumber = 0
+            self._tokenizeCurrentLine()
 
+    def _tokenizeCurrentLine(self):
+        words = self.currentLine.split()
+
+        buffer = ""
+        previousLexemeType = None
+        isLineTokenized = False
+
+        while not isLineTokenized:
+            for word in words:
+                if len(buffer) > 0:
+                    buffer += " "
+                buffer += word
+
+                lexemeType = self._getLexemeType(buffer)
                 if lexemeType != None:
-                    token = Token(string, lexemeType)
-                    self.lexemes.append(token)
+                    self.lexemes.append(Token(buffer, lexemeType))
+                    previousLexemeType = lexemeType
 
-                    #mema to pre HAHHAHAHAHA ayusin mo na lang
-                    if(token.lexemeType == 'variable declaration' and len(line.split()) > 3):
-                        string += " "
-                    elif(token.lexemeType == 'loop declaration'):
-                        string += " "
-                    else:
-                        string = ""
+                    buffer = ""
+                    self.currentLineColumnNumber += len(buffer)
 
-                else:
-                    string += " "
+            if buffer == "":
+                break
 
-            # if string != "":
-            #      print("Syntax error")
-            #      break
+            possibleIdentifier, *words = buffer.split()
+
+            if not self._isIdentifier(possibleIdentifier):
+                self._throwSyntaxError("Unexpected token")
+
+            identifier = possibleIdentifier
+
+            identifierLexemeType = self._getIdentifierTypeBasedOn(previousLexemeType)
+
+            self.lexemes.append(Token(identifier, identifierLexemeType))
+            self.currentLineColumnNumber += len(identifier) + 1
+            previousLexemeType = identifierLexemeType
+
+            buffer = ""
+
+    def _throwSyntaxError(self, message):
+        syntaxErrorArgs = (
+            None,
+            self.currentLineNumber,
+            self.currentLineColumnNumber,
+            self.currentLine,
+        )
+
+        raise SyntaxError(message, syntaxErrorArgs)
 
     def _getLexemeType(self, lexeme):
         allPatterns = dict.keys(self.patternTypes)
@@ -96,6 +131,52 @@ class Lexer:
                 lexemeType = self.patternTypes[pattern]
                 return lexemeType
         return None
+
+    def _isIdentifier(self, word):
+        return re.match(r"^[a-zA-Z]\w*$", word)
+
+    def _getIdentifierTypeBasedOn(self, previousLexemeType):
+        variableIdentifierPrecedingLexemeTypes = [
+            "variable declaration",
+            "variable assignment",
+            "addition operation",
+            "subtraction operation",
+            "multiplication operation",
+            "quotient operation",
+            "modulo operation",
+            "max operation",
+            "min operation",
+            "and operation",
+            "or operation",
+            "xor operation",
+            "not operation",
+            "infinite arity and operation",
+            "infinite arity or operation",
+            "equal to operation",
+            "not equal to operation",
+            "concantenation operaion",
+            "explicit typecasting keyword",
+            "operand seperator",
+            "output keyword",
+            "input keyword",
+            "case keyword",
+            "keyword in loop",
+            "loop condition keyword",
+        ]
+
+        loopIdentifierPrecedingLexemeTypes = [
+            "loop declaration and delimeter",
+            "loop delimiter",
+        ]
+
+        if previousLexemeType == None:
+            return "variable identifier"
+        if previousLexemeType in variableIdentifierPrecedingLexemeTypes:
+            return "variable identifier"
+        if previousLexemeType in loopIdentifierPrecedingLexemeTypes:
+            return "loop identifier"
+
+        self._throwSyntaxError("Unexpected token")
 
 
 class Token:
