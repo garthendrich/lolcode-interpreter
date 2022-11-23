@@ -115,6 +115,8 @@ class Lexer:
 
             buffer = ""
 
+        self.lexemes.append(Token("\n", TOKEN.LINEBREAK))
+
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (
             None,

@@ -21,8 +21,8 @@ class Parser:
         if len(statements.body) == 0:
             self._throwSyntaxError("Expected statements")
 
-        # if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
-        #     self._throwSyntaxError('Missing ending keyword "KTHXBYE"')
+        if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
+            self._throwSyntaxError('Missing ending keyword "KTHXBYE"')
 
         return Node(ABSTRACTION.PROGRAM, statements)
 
@@ -36,6 +36,10 @@ class Parser:
         output = self._Output()
         if output is not None:
             statements.append(output)
+
+        if self._lookahead().lexemeType is TOKEN.LINEBREAK:
+            self.lexemes.pop(0)
+            statements.append(self._Statements())
 
         return Node(ABSTRACTION.STATEMENT, statements)
 
@@ -112,6 +116,8 @@ class Parser:
             0,
             None,
         )
+
+        print("Syntax error")
 
         # raise SyntaxError(message, syntaxErrorArgs)
 
