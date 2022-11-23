@@ -33,6 +33,10 @@ class Parser:
         if declaration is not None:
             statements.append(declaration)
 
+        output = self._Output()
+        if output is not None:
+            statements.append(output)
+
         return statements
 
     def _Declaration(self):
@@ -48,6 +52,27 @@ class Parser:
         #     if self._lookahead().lexemeType is not TOKEN.
 
         return Node(ABSTRACTION.DECLARATION, "I HAS A @1")
+
+    def _Output(self):
+        if self._lookahead().lexemetype is not TOKEN.OUTPUT_KEYWORD:
+            return
+        self.lexemes.pop(0)
+
+        operand = self._Operand()
+        if operand is not None:
+            return Node(ABSTRACTION.OUTPUT, ['VISIBLE', operand])
+        return
+
+    def _Operand(self):
+        if self._lookahead.lexemetype is TOKEN.BOOL_LITERAL:
+            lexeme = self.lexemes.pop(0)
+            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+        
+
+        # if self._lookahead.lexemetype is not TOKEN.VARIABLE_IDENTIFIER:
+        #     return
+        # self.lexemes.
+        
 
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (
