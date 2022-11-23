@@ -46,3 +46,5 @@ class TOKEN:
     STRING_LITERAL = "string literal"
     BOOL_LITERAL = "bool literal"
     TYPE_LITERAL = "type literal"
+    VARIABLE_IDENTIFIER = "variable identifier"
+    LOOP_IDENTIFIER = "loop identifier"

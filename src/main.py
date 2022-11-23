@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 from lexer import *
-from syntax_analyzer import Parser
+from syntax_analyzer import Node, Parser
 
 
 def main():
@@ -58,12 +58,33 @@ class Interpreter:
 
             ast = parser.parse(lexemes)
 
+            print(ast.type)
+            tempPrintAstRecursive(ast)
+
             status = ""
         except SyntaxError as error:
             errorArrowIndenter = (error.offset or 0) * " "
             status = f"\nline {error.lineno}:\n{error.text}\n{errorArrowIndenter}^\n{error.msg}"
 
         self.console.outputResult("> " + status + "\n")
+
+
+def tempPrintAstRecursive(ast):
+    if not hasattr(ast, "body"):
+        print(ast.type)
+        return
+
+    if isinstance(ast.body, str):
+        print(ast.body)
+        return
+
+    if isinstance(ast.body, Node):
+        tempPrintAstRecursive(ast.body)
+        return
+
+    # if array
+    for element in ast.body:
+        tempPrintAstRecursive(element)
 
 
 class TextEditor:

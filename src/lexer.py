@@ -171,11 +171,11 @@ class Lexer:
         ]
 
         if previousLexemeType == None:
-            return "variable identifier"
+            return TOKEN.VARIABLE_IDENTIFIER
         if previousLexemeType in variableIdentifierPrecedingLexemeTypes:
-            return "variable identifier"
+            return TOKEN.VARIABLE_IDENTIFIER
         if previousLexemeType in loopIdentifierPrecedingLexemeTypes:
-            return "loop identifier"
+            return TOKEN.LOOP_IDENTIFIER
 
         self._throwSyntaxError("Unexpected token")
 

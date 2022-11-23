@@ -8,21 +8,46 @@ class Parser:
 
         return self._Program()
 
+    def _lookahead(self):
+        return self.lexemes[0]
+
     def _Program(self):
-        lexeme = self.lexemes.pop(0)
-        if lexeme.lexemeType is not TOKEN.CODE_DELIMITER:
+        if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
             self._throwSyntaxError('Missing starting keyword "HAI"')
+        self.lexemes.pop(0)
 
         statements = self._Statements()
 
-        # lexeme.lexemeType = self.lexemes.pop(0)
-        # if lexeme is not TOKEN.CODE_DELIMITER:
+        if len(statements) == 0:
+            self._throwSyntaxError("Expected statements")
+
+        # if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
         #     self._throwSyntaxError('Missing ending keyword "KTHXBYE"')
 
         return Node(ABSTRACTION.PROGRAM, statements)
 
     def _Statements(self):
-        return []
+        statements = []
+
+        declaration = self._Declaration()
+        if declaration is not None:
+            statements.append(declaration)
+
+        return statements
+
+    def _Declaration(self):
+        if self._lookahead().lexemeType is not TOKEN.VARIABLE_DECLARATION:
+            return
+        self.lexemes.pop(0)
+
+        if self._lookahead().lexemeType is not TOKEN.VARIABLE_IDENTIFIER:
+            return
+        self.lexemes.pop(0)
+
+        # if self._lookahead().lexemeType is TOKEN.VARIABLE_ASSIGNMENT:
+        #     if self._lookahead().lexemeType is not TOKEN.
+
+        return Node(ABSTRACTION.DECLARATION, "I HAS A @1")
 
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (
@@ -32,7 +57,7 @@ class Parser:
             None,
         )
 
-        raise SyntaxError(message, syntaxErrorArgs)
+        # raise SyntaxError(message, syntaxErrorArgs)
 
 
 class Node:
