@@ -50,8 +50,14 @@ class Parser:
             return
         body.append(self.lexemes.pop(0))
 
-        # if self._lookahead().lexemeType is TOKEN.VARIABLE_ASSIGNMENT:
-        #     if self._lookahead().lexemeType is not TOKEN.
+        if self._lookahead().lexemeType is not TOKEN.VARIABLE_ASSIGNMENT:
+            return Node(ABSTRACTION.DECLARATION, body)
+        body.append(self.lexemes.pop(0))
+
+        operand = self._Operand()
+        if operand is None:
+            self._throwSyntaxError("Needs value")
+        body.append(operand)
 
         return Node(ABSTRACTION.DECLARATION, body)
 
