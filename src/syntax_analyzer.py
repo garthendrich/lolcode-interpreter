@@ -40,28 +40,34 @@ class Parser:
         return statements
 
     def _Declaration(self):
+        body = []
+
         if self._lookahead().lexemeType is not TOKEN.VARIABLE_DECLARATION:
             return
-        self.lexemes.pop(0)
+        body.append(self.lexemes.pop(0))
 
         if self._lookahead().lexemeType is not TOKEN.VARIABLE_IDENTIFIER:
             return
-        self.lexemes.pop(0)
+        body.append(self.lexemes.pop(0))
 
         # if self._lookahead().lexemeType is TOKEN.VARIABLE_ASSIGNMENT:
         #     if self._lookahead().lexemeType is not TOKEN.
 
-        return Node(ABSTRACTION.DECLARATION, "I HAS A @1")
+        return Node(ABSTRACTION.DECLARATION, body)
 
     def _Output(self):
+        body = []
+
         if self._lookahead().lexemeType is not TOKEN.OUTPUT_KEYWORD:
             return
-        self.lexemes.pop(0)
+        body.append(self.lexemes.pop(0))
 
         operand = self._Operand()
-        if operand is not None:
-            return Node(ABSTRACTION.OUTPUT, ['VISIBLE', operand])
-        return
+        if operand is None:
+            return
+        body.append(operand)
+
+        return Node(ABSTRACTION.OUTPUT, body)
 
     def _Operand(self):
         literal = self._Literal()
