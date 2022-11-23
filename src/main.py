@@ -58,7 +58,6 @@ class Interpreter:
 
             ast = parser.parse(lexemes)
 
-            print(ast.type)
             tempPrintAstRecursive(ast)
 
             status = ""
@@ -70,27 +69,29 @@ class Interpreter:
 
 
 def tempPrintAstRecursive(ast):
+    if isinstance(ast, Node):
+        print(ast.type)
+
+        if hasattr(ast, "body"):
+            if isinstance(ast.body, str):
+                print(ast.body)
+                return
+
+            if isinstance(ast.body, Node):
+                tempPrintAstRecursive(ast.body)
+                return
+
+            # if ast.body is an array
+            for element in ast.body:
+                tempPrintAstRecursive(element)
+
     if isinstance(ast, str):
         print(ast)
         return
 
-    if not hasattr(ast, "body"):
-        print(ast.type)
+    if isinstance(ast, Token):
+        print(ast.lexemeType)
         return
-
-    if isinstance(ast.body, str):
-        print(ast.body)
-        return
-
-    if isinstance(ast.body, Node):
-        tempPrintAstRecursive(ast.body)
-        return
-
-    # if array
-    for element in ast.body:
-        tempPrintAstRecursive(element)
-
-    
 
 
 class TextEditor:
