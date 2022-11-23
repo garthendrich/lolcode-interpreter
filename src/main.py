@@ -70,6 +70,10 @@ class Interpreter:
 
 
 def tempPrintAstRecursive(ast):
+    if isinstance(ast, str):
+        print(ast)
+        return
+
     if not hasattr(ast, "body"):
         print(ast.type)
         return

@@ -3,3 +3,4 @@ class ABSTRACTION:
     DECLARATION = "declaration"
     OPERAND = 'operand'
     OUTPUT = 'output'
+    LITERAL = 'literal'

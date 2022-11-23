@@ -54,7 +54,7 @@ class Parser:
         return Node(ABSTRACTION.DECLARATION, "I HAS A @1")
 
     def _Output(self):
-        if self._lookahead().lexemetype is not TOKEN.OUTPUT_KEYWORD:
+        if self._lookahead().lexemeType is not TOKEN.OUTPUT_KEYWORD:
             return
         self.lexemes.pop(0)
 
@@ -64,15 +64,34 @@ class Parser:
         return
 
     def _Operand(self):
-        if self._lookahead.lexemetype is TOKEN.BOOL_LITERAL:
+        literal = self._Literal()
+        if literal is not None:
+            return Node(ABSTRACTION.OUTPUT, literal)
+
+        if self._lookahead().lexemeType is TOKEN.VARIABLE_IDENTIFIER:
+            lexeme = self.lexemes.pop(0)
+            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+
+        return
+    
+    def _Literal(self):
+        if self._lookahead().lexemeType is TOKEN.BOOL_LITERAL:
             lexeme = self.lexemes.pop(0)
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
         
+        if self._lookahead().lexemeType is TOKEN.FLOAT_LITERAL:
+            lexeme = self.lexemes.pop(0)
+            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
-        # if self._lookahead.lexemetype is not TOKEN.VARIABLE_IDENTIFIER:
-        #     return
-        # self.lexemes.
-        
+        if self._lookahead().lexemeType is TOKEN.INTEGER_LITERAL:
+            lexeme = self.lexemes.pop(0)
+            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+
+        if self._lookahead().lexemeType is TOKEN.TYPE_LITERAL:
+            lexeme = self.lexemes.pop(0)
+            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+
+        return
 
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (
