@@ -18,7 +18,7 @@ class Parser:
 
         statements = self._Statements()
 
-        if len(statements) == 0:
+        if len(statements.body) == 0:
             self._throwSyntaxError("Expected statements")
 
         # if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
@@ -37,7 +37,7 @@ class Parser:
         if output is not None:
             statements.append(output)
 
-        return statements
+        return Node(ABSTRACTION.STATEMENT, statements)
 
     def _Declaration(self):
         body = []
