@@ -58,7 +58,7 @@ class Interpreter:
 
             ast = parser.parse(lexemes)
 
-            tempPrintAstRecursive(ast)
+            # tempPrintAstRecursive(ast)
 
             status = ""
         except SyntaxError as error:
