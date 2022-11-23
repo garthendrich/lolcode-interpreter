@@ -15,6 +15,7 @@ class Parser:
         if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
             self._throwSyntaxError('Missing starting keyword "HAI"')
         self.lexemes.pop(0)
+        self.lexemes.pop(0)
 
         statements = self._Statements()
 
@@ -37,9 +38,13 @@ class Parser:
         if output is not None:
             statements.append(output)
 
+        if len(statements) == 0:
+            self._throwSyntaxError("Statement error")
+
         if self._lookahead().lexemeType is TOKEN.LINEBREAK:
             self.lexemes.pop(0)
-            statements.append(self._Statements())
+            if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
+                statements.append(self._Statements())
 
         return Node(ABSTRACTION.STATEMENT, statements)
 
@@ -100,6 +105,10 @@ class Parser:
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
         if self._lookahead().lexemeType is TOKEN.INTEGER_LITERAL:
+            lexeme = self.lexemes.pop(0)
+            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+
+        if self._lookahead().lexemeType is TOKEN.STRING_LITERAL:
             lexeme = self.lexemes.pop(0)
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
