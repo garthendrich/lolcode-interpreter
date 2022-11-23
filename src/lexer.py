@@ -63,7 +63,8 @@ class Lexer:
 
     def process(self, content):
         content = self._removeIndents(content)
-        return self._tokenizeSourceCode(content)
+        self._tokenizeSourceCode(content)
+        return self.lexemes
 
     def _removeIndents(self, content):
         return re.sub(r"\t", "", content)

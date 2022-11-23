@@ -1,0 +1,2 @@
+class ABSTRACTION:
+    PROGRAM = "program"

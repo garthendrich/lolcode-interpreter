@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 from lexer import *
+from syntax_analyzer import Parser
 
 
 def main():
@@ -47,12 +48,16 @@ class Interpreter:
     def processText(self):
         input_text = self.textEditor.getInputFromTextEditor()
         lexer = Lexer()
+        parser = Parser()
 
         self.table_lexemes.clearTable()
 
         try:
-            lexer.process(input_text)
-            self.table_lexemes.insertObjectList(lexer.lexemes)
+            lexemes = lexer.process(input_text)
+            self.table_lexemes.insertObjectList(lexemes)
+
+            ast = parser.parse(lexemes)
+
             status = ""
         except SyntaxError as error:
             errorArrowIndenter = (error.offset or 0) * " "
