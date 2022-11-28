@@ -31,10 +31,6 @@ class Parser:
 
         children.append(self._Statements())
 
-        # if not self._nextTokenIs(TOKEN.LINEBREAK):
-        #     self._throwSyntaxError("Unexpected keyword")
-        # self._moveNextTokenTo(programChildren)
-
         if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
             self._throwSyntaxError('Missing starting keyword "KTHXBYE"')
         self._moveNextTokenTo(children)
@@ -42,47 +38,29 @@ class Parser:
         return Node(ABSTRACTION.PROGRAM, children)
 
     def _Statements(self):
-        children = []
+        statement = (
+            self._Declaration()
+            or self._Output()
+            or self._Addition()
+            or self._Subtraction()
+            or self._Multiplication()
+            or self._Division()
+            or self._Max()
+            or self._Min()
+        )
 
-        declaration = self._Declaration()
-        if declaration is not None:
-            children.append(declaration)
-
-        output = self._Output()
-        if output is not None:
-            children.append(output)
-
-        addition = self._Addition()
-        if addition is not None:
-            children.append(addition)
-
-        subtraction = self._Subtraction()
-        if subtraction is not None:
-            children.append(subtraction)
-
-        multiplication = self._Multiplication()
-        if multiplication is not None:
-            children.append(multiplication)
-
-        division = self._Division()
-        if division is not None:
-            children.append(division)
-
-        max = self._Max()
-        if max is not None:
-            children.append(max)
-
-        min = self._Min()
-        if min is not None:
-            children.append(min)
-
-        if len(children) == 0:
+        if statement is None:
             self._throwSyntaxError("Statement error")
 
-        if self._nextTokenIs(TOKEN.LINEBREAK):
-            self.lexemes.pop(0)
-            if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
-                children.append(self._Statements())
+        children = [statement]
+
+        if not self._nextTokenIs(TOKEN.LINEBREAK):
+            self._throwSyntaxError("Unexpected keyword")
+        self._moveNextTokenTo(children)
+
+        # if not yet end of source code
+        if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
+            children.append(self._Statements())
 
         return Node(ABSTRACTION.STATEMENT, children)
 
