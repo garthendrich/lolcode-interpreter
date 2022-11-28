@@ -57,16 +57,16 @@ class Parser:
 
         children = [statement]
 
-        if not self._nextTokenIs(TOKEN.LINEBREAK):
-            self._throwSyntaxError("Unexpected keyword")
+        if self._nextTokenIs(TOKEN.LINEBREAK):
+            self._moveNextTokenTo(children)
 
-        self._moveNextTokenTo(children)
+            # if not yet end of source code
+            if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
+                children.append(self._Statements())
 
-        # if not yet end of source code
-        if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
-            children.append(self._Statements())
+            return Node(ABSTRACTION.STATEMENT, children)
 
-        return Node(ABSTRACTION.STATEMENT, children)
+        self._throwSyntaxError("Unexpected keyword")
 
     def _Declaration(self):
         children = []
