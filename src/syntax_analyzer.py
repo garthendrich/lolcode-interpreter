@@ -1,5 +1,6 @@
 from abstractions import ABSTRACTION
 from token_enum import TOKEN
+from utils import isEmpty
 
 
 class Parser:
@@ -8,345 +9,361 @@ class Parser:
 
         return self._Program()
 
-    def _lookahead(self):
-        return self.lexemes[0]
+    def _nextTokenIs(self, tokenType):
+        return self.lexemes[0].lexemeType == tokenType
+
+    def _popNext(self):
+        return self.lexemes.pop(0)
+
+    def _moveNextTokenTo(self, list):
+        return list.append(self._popNext())
 
     def _Program(self):
-        if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
+        children = []
+
+        if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
             self._throwSyntaxError('Missing starting keyword "HAI"')
-        self.lexemes.pop(0)
-        self.lexemes.pop(0)
+        self._moveNextTokenTo(children)
+
+        if not self._nextTokenIs(TOKEN.LINEBREAK):
+            self._throwSyntaxError("Unexpected keyword")
+        self._moveNextTokenTo(children)
 
         statements = self._Statements()
+        if isEmpty(statements.body):
+            self._throwSyntaxError("Expected at least one statement")
+        children.append(statements)
 
-        if len(statements.body) == 0:
-            self._throwSyntaxError("Expected statements")
+        # if not self._nextTokenIs(TOKEN.LINEBREAK):
+        #     self._throwSyntaxError("Unexpected keyword")
+        # self._moveNextTokenTo(programChildren)
 
-        if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
-            self._throwSyntaxError('Missing ending keyword "KTHXBYE"')
+        if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
+            self._throwSyntaxError('Missing starting keyword "KTHXBYE"')
+        self._moveNextTokenTo(children)
 
-        return Node(ABSTRACTION.PROGRAM, statements)
+        return Node(ABSTRACTION.PROGRAM, children)
 
     def _Statements(self):
-        statements = []
+        children = []
 
         declaration = self._Declaration()
         if declaration is not None:
-            statements.append(declaration)
+            children.append(declaration)
 
         output = self._Output()
         if output is not None:
-            statements.append(output)
+            children.append(output)
 
         addition = self._Addition()
         if addition is not None:
-            statements.append(addition)
+            children.append(addition)
 
         subtraction = self._Subtraction()
         if subtraction is not None:
-            statements.append(subtraction)
+            children.append(subtraction)
 
         multiplication = self._Multiplication()
         if multiplication is not None:
-            statements.append(multiplication)
+            children.append(multiplication)
 
         division = self._Division()
         if division is not None:
-            statements.append(division)
+            children.append(division)
 
         max = self._Max()
         if max is not None:
-            statements.append(max)
+            children.append(max)
 
         min = self._Min()
         if min is not None:
-            statements.append(min)
+            children.append(min)
 
-        if len(statements) == 0:
+        if len(children) == 0:
             self._throwSyntaxError("Statement error")
 
-        if self._lookahead().lexemeType is TOKEN.LINEBREAK:
+        if self._nextTokenIs(TOKEN.LINEBREAK):
             self.lexemes.pop(0)
-            if self._lookahead().lexemeType is not TOKEN.CODE_DELIMITER:
-                statements.append(self._Statements())
+            if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
+                children.append(self._Statements())
 
-        return Node(ABSTRACTION.STATEMENT, statements)
+        return Node(ABSTRACTION.STATEMENT, children)
 
     def _Declaration(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.VARIABLE_DECLARATION:
+        if not self._nextTokenIs(TOKEN.VARIABLE_DECLARATION):
             return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
-        if self._lookahead().lexemeType is not TOKEN.VARIABLE_IDENTIFIER:
+        if not self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
             return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
-        if self._lookahead().lexemeType is not TOKEN.VARIABLE_ASSIGNMENT:
-            return Node(ABSTRACTION.DECLARATION, body)
-        body.append(self.lexemes.pop(0))
+        if not self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
+            return Node(ABSTRACTION.DECLARATION, children)
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is None:
             self._throwSyntaxError("Needs value")
-        body.append(operand)
+        children.append(operand)
 
-        return Node(ABSTRACTION.DECLARATION, body)
+        return Node(ABSTRACTION.DECLARATION, children)
 
     def _Output(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.OUTPUT_KEYWORD:
+        if not self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
             return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is None:
             return
-        body.append(operand)
+        children.append(operand)
 
-        return Node(ABSTRACTION.OUTPUT, body)
+        return Node(ABSTRACTION.OUTPUT, children)
 
     def _Operand(self):
         literal = self._Literal()
         if literal is not None:
             return Node(ABSTRACTION.OUTPUT, literal)
 
-        if self._lookahead().lexemeType is TOKEN.VARIABLE_IDENTIFIER:
+        if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
             lexeme = self.lexemes.pop(0)
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
         return
-    
+
     def _Literal(self):
-        if self._lookahead().lexemeType is TOKEN.BOOL_LITERAL:
-            lexeme = self.lexemes.pop(0)
-            return Node(lexeme.lexemeType, lexeme.lexeme)
-        
-        if self._lookahead().lexemeType is TOKEN.FLOAT_LITERAL:
+        if self._nextTokenIs(TOKEN.BOOL_LITERAL):
             lexeme = self.lexemes.pop(0)
             return Node(lexeme.lexemeType, lexeme.lexeme)
 
-        if self._lookahead().lexemeType is TOKEN.INTEGER_LITERAL:
+        if self._nextTokenIs(TOKEN.FLOAT_LITERAL):
             lexeme = self.lexemes.pop(0)
             return Node(lexeme.lexemeType, lexeme.lexeme)
 
-        if self._lookahead().lexemeType is TOKEN.STRING_LITERAL:
+        if self._nextTokenIs(TOKEN.INTEGER_LITERAL):
+            lexeme = self.lexemes.pop(0)
+            return Node(lexeme.lexemeType, lexeme.lexeme)
+
+        if self._nextTokenIs(TOKEN.STRING_LITERAL):
             lexeme = self.lexemes.pop(0)
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
-        if self._lookahead().lexemeType is TOKEN.TYPE_LITERAL:
+        if self._nextTokenIs(TOKEN.TYPE_LITERAL):
             lexeme = self.lexemes.pop(0)
             return Node(lexeme.lexemeType, lexeme.lexeme)
 
-        if self._lookahead().lexemeType is TOKEN.STRING_LITERAL:
+        if self._nextTokenIs(TOKEN.STRING_LITERAL):
             lexeme = self.lexemes.pop(0)
             return Node(lexeme.lexemeType, lexeme.lexeme)
 
         return
 
     def _Addition(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.ADDITION_OPERATION:
+        if not self._nextTokenIs(TOKEN.ADDITION_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.SUM, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.SUM, children)
 
     def _Subtraction(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.SUBTRACTION_OPERATION:
+        if not self._nextTokenIs(TOKEN.SUBTRACTION_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.DIFF, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.DIFF, children)
 
     def _Multiplication(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.MULTIPLICATION_OPERATION:
+        if not self._nextTokenIs(TOKEN.MULTIPLICATION_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.MUL, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.MUL, children)
 
     def _Division(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.QUOTIENT_OPERATION:
+        if not self._nextTokenIs(TOKEN.QUOTIENT_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.DIV, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.DIV, children)
 
     def _Max(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.MAX_OPERATION:
+        if not self._nextTokenIs(TOKEN.MAX_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.MAX, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.MAX, children)
 
     def _Min(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.MIN_OPERATION:
+        if not self._nextTokenIs(TOKEN.MIN_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.MIN, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.MIN, children)
 
     def _And(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.AND_OPERATION:
+        if not self._nextTokenIs(TOKEN.AND_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.AND, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.AND, children)
 
     def _Or(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.OR_OPERATION:
+        if not self._nextTokenIs(TOKEN.OR_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.OR, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.OR, children)
 
     def _Xor(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.XOR_OPERATION:
+        if not self._nextTokenIs(TOKEN.XOR_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
-        operand = self._Operand()
-        if operand is not None:
-            body.append(operand)
-        
-        if self._lookahead().lexemeType is not TOKEN.OPERAND_SEPARATOR:
-            return
-        body.append(self.lexemes.pop(0))
+        self._moveNextTokenTo(children)
 
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.XOR, body)
+        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+            return
+        self._moveNextTokenTo(children)
+
+        operand = self._Operand()
+        if operand is not None:
+            children.append(operand)
+
+        return Node(ABSTRACTION.XOR, children)
 
     def _Not(self):
-        body = []
+        children = []
 
-        if self._lookahead().lexemeType is not TOKEN.NOT_OPERATION:
+        if not self._nextTokenIs(TOKEN.NOT_OPERATION):
             return
-        body.append(self.lexemes.pop(0))
-        
+        self._moveNextTokenTo(children)
+
         operand = self._Operand()
         if operand is not None:
-            body.append(operand)
+            children.append(operand)
 
-        return Node(ABSTRACTION.NOT, body)
+        return Node(ABSTRACTION.NOT, children)
 
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (
@@ -362,6 +379,6 @@ class Parser:
 
 
 class Node:
-    def __init__(self, type, body):
+    def __init__(self, type, children: list):
         self.type = type
-        self.body = body
+        self.children = children

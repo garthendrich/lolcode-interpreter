@@ -73,16 +73,16 @@ def tempPrintAstRecursive(ast):
         print(ast.type)
 
         if hasattr(ast, "body"):
-            if isinstance(ast.body, str):
-                print(ast.body)
+            if isinstance(ast.children, str):
+                print(ast.children)
                 return
 
-            if isinstance(ast.body, Node):
-                tempPrintAstRecursive(ast.body)
+            if isinstance(ast.children, Node):
+                tempPrintAstRecursive(ast.children)
                 return
 
             # if ast.body is an array
-            for element in ast.body:
+            for element in ast.children:
                 tempPrintAstRecursive(element)
 
     if isinstance(ast, str):
