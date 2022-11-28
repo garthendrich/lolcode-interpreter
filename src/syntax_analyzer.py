@@ -120,31 +120,18 @@ class Parser:
         return None
 
     def _Literal(self):
-        if self._nextTokenIs(TOKEN.BOOL_LITERAL):
-            lexeme = self.lexemes.pop(0)
+        if (
+            self._nextTokenIs(TOKEN.BOOL_LITERAL)
+            or self._nextTokenIs(TOKEN.FLOAT_LITERAL)
+            or self._nextTokenIs(TOKEN.INTEGER_LITERAL)
+            or self._nextTokenIs(TOKEN.STRING_LITERAL)
+            or self._nextTokenIs(TOKEN.TYPE_LITERAL)
+            or self._nextTokenIs(TOKEN.STRING_LITERAL)
+        ):
+            lexeme = self._popNext()
             return Node(lexeme.lexemeType, lexeme.lexeme)
 
-        if self._nextTokenIs(TOKEN.FLOAT_LITERAL):
-            lexeme = self.lexemes.pop(0)
-            return Node(lexeme.lexemeType, lexeme.lexeme)
-
-        if self._nextTokenIs(TOKEN.INTEGER_LITERAL):
-            lexeme = self.lexemes.pop(0)
-            return Node(lexeme.lexemeType, lexeme.lexeme)
-
-        if self._nextTokenIs(TOKEN.STRING_LITERAL):
-            lexeme = self.lexemes.pop(0)
-            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
-
-        if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-            lexeme = self.lexemes.pop(0)
-            return Node(lexeme.lexemeType, lexeme.lexeme)
-
-        if self._nextTokenIs(TOKEN.STRING_LITERAL):
-            lexeme = self.lexemes.pop(0)
-            return Node(lexeme.lexemeType, lexeme.lexeme)
-
-        return
+        return None
 
     def _Addition(self):
         children = []
