@@ -63,11 +63,18 @@ class Lexer:
 
     def process(self, content):
         content = self._removeIndents(content)
+        content = self._removeComments(content)
+        print(content)
         self._tokenizeSourceCode(content)
         return self.lexemes
 
     def _removeIndents(self, content):
         return re.sub(r"\t", "", content)
+
+    def _removeComments(self, content):
+        noSingleLineComments = re.sub(r"BTW .*\n", "", content)
+        return re.sub(r"(OBTW(?<=OBTW)(.|\n)*(?=TLDR)TLDR)", "", noSingleLineComments)
+
 
     def _tokenizeSourceCode(self, sourceCode):
         for lineIndex, line in enumerate(sourceCode.split("\n")):
@@ -180,8 +187,6 @@ class Lexer:
             return TOKEN.LOOP_IDENTIFIER
 
         self._throwSyntaxError("Unexpected token")
-
-
 class Token:
     def __init__(self, lexeme, lexemeType):
         self.lexeme = lexeme
