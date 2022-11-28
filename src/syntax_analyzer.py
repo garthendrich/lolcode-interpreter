@@ -16,7 +16,7 @@ class Parser:
         return self.lexemes.pop(0)
 
     def _moveNextTokenTo(self, list):
-        return list.append(self._popNext())
+        list.append(self._popNext())
 
     def _Program(self):
         children = []
@@ -67,24 +67,26 @@ class Parser:
     def _Declaration(self):
         children = []
 
-        if not self._nextTokenIs(TOKEN.VARIABLE_DECLARATION):
-            return
-        self._moveNextTokenTo(children)
+        if self._nextTokenIs(TOKEN.VARIABLE_DECLARATION):
+            self._moveNextTokenTo(children)
 
-        if not self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            return
-        self._moveNextTokenTo(children)
+            if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+                self._moveNextTokenTo(children)
 
-        if not self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
-            return Node(ABSTRACTION.DECLARATION, children)
-        self._moveNextTokenTo(children)
+                if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
+                    self._moveNextTokenTo(children)
 
-        operand = self._Operand()
-        if operand is None:
-            self._throwSyntaxError("Needs value")
-        children.append(operand)
+                    operand = self._Operand()
+                    if operand is None:
+                        self._throwSyntaxError("Expected an expression")
+                        
+                    children.append(operand)
 
-        return Node(ABSTRACTION.DECLARATION, children)
+                return Node(ABSTRACTION.DECLARATION, children)
+
+            self._throwSyntaxError("Expected a variable identifier")
+
+        return None
 
     def _Output(self):
         children = []
