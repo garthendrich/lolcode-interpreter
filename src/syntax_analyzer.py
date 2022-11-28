@@ -29,10 +29,7 @@ class Parser:
             self._throwSyntaxError("Unexpected keyword")
         self._moveNextTokenTo(children)
 
-        statements = self._Statements()
-        if isEmpty(statements.body):
-            self._throwSyntaxError("Expected at least one statement")
-        children.append(statements)
+        children.append(self._Statements())
 
         # if not self._nextTokenIs(TOKEN.LINEBREAK):
         #     self._throwSyntaxError("Unexpected keyword")
