@@ -21,21 +21,24 @@ class Parser:
     def _Program(self):
         children = []
 
-        if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
-            self._throwSyntaxError('Missing starting keyword "HAI"')
-        self._moveNextTokenTo(children)
+        if self._nextTokenIs(TOKEN.CODE_DELIMITER):
+            self._moveNextTokenTo(children)
 
-        if not self._nextTokenIs(TOKEN.LINEBREAK):
+            if self._nextTokenIs(TOKEN.LINEBREAK):
+                self._moveNextTokenTo(children)
+
+                children.append(self._Statements())
+
+                if self._nextTokenIs(TOKEN.CODE_DELIMITER):
+                    self._moveNextTokenTo(children)
+
+                    return Node(ABSTRACTION.PROGRAM, children)
+
+                self._throwSyntaxError('Missing starting keyword "KTHXBYE"')
+
             self._throwSyntaxError("Unexpected keyword")
-        self._moveNextTokenTo(children)
 
-        children.append(self._Statements())
-
-        if not self._nextTokenIs(TOKEN.CODE_DELIMITER):
-            self._throwSyntaxError('Missing starting keyword "KTHXBYE"')
-        self._moveNextTokenTo(children)
-
-        return Node(ABSTRACTION.PROGRAM, children)
+        self._throwSyntaxError('Missing starting keyword "HAI"')
 
     def _Statements(self):
         statement = (
@@ -56,6 +59,7 @@ class Parser:
 
         if not self._nextTokenIs(TOKEN.LINEBREAK):
             self._throwSyntaxError("Unexpected keyword")
+
         self._moveNextTokenTo(children)
 
         # if not yet end of source code
@@ -79,7 +83,7 @@ class Parser:
                     operand = self._Operand()
                     if operand is None:
                         self._throwSyntaxError("Expected an expression")
-                        
+
                     children.append(operand)
 
                 return Node(ABSTRACTION.DECLARATION, children)
@@ -88,19 +92,21 @@ class Parser:
 
         return None
 
+    # ! one operand
     def _Output(self):
         children = []
 
-        if not self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
-            return
-        self._moveNextTokenTo(children)
+        if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
+            self._moveNextTokenTo(children)
 
-        operand = self._Operand()
-        if operand is None:
-            return
-        children.append(operand)
+            operand = self._Operand()
+            if operand is None:
+                self._throwSyntaxError("Expected an operand")
 
-        return Node(ABSTRACTION.OUTPUT, children)
+            children.append(operand)
+            return Node(ABSTRACTION.OUTPUT, children)
+
+        return None
 
     def _Operand(self):
         literal = self._Literal()
