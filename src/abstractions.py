@@ -15,3 +15,4 @@ class ABSTRACTION:
     OR = 'or statement'
     XOR = 'xor statement'
     NOT = 'not statement'
+    MULTIPLE_OPERAND = 'multiple operand'

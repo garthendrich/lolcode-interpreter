@@ -116,6 +116,7 @@ class TextEditor:
             title="Select a file",
             filetypes=(("Text files", "*.lol"), ("all files", "*.*")),
         )
+        self.textField.delete(1.0, END)
         self.textField.insert(END, open(filename, "r").read())
 
     def getInputFromTextEditor(self):

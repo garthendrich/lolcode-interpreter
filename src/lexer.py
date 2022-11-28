@@ -22,7 +22,7 @@ class Lexer:
             r"^QUOSHUNT OF$": TOKEN.QUOTIENT_OPERATION,
             r"^MOD OF$": TOKEN.MODULO_OPERATION,
             r"^BIGGR OF$": TOKEN.MAX_OPERATION,
-            r"^SMALLR$": TOKEN.MIN_OPERATION,
+            r"^SMALLR OF$": TOKEN.MIN_OPERATION,
             r"^BOTH OF$": TOKEN.AND_OPERATION,
             r"^EITHER OF$": TOKEN.OR_OPERATION,
             r"^WON OF$": TOKEN.XOR_OPERATION,
@@ -46,7 +46,7 @@ class Lexer:
             r"^OIC$": TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER,
             r"^WTF\?$": TOKEN.SWITCH_CASE_STATEMENT_DELIMITER,
             r"^OMG$": TOKEN.CASE_KEYWORD,
-            r"^OMGTWF$": TOKEN.DEFAULT_CASE_KEYWORD,
+            r"^OMGWTF$": TOKEN.DEFAULT_CASE_KEYWORD,
             r"^IM IN YR$": TOKEN.LOOP_DECLARATION_AND_DELIMITER,
             r"^UPPIN$": TOKEN.INCREMENT_KEYWORD,
             r"^NERFIN$": TOKEN.DECREMENT_KEYWORD,
@@ -64,7 +64,6 @@ class Lexer:
     def process(self, content):
         content = self._removeIndents(content)
         content = self._removeComments(content)
-        print(content)
         self._tokenizeSourceCode(content)
         return self.lexemes
 

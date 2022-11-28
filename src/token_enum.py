@@ -8,7 +8,7 @@ class TOKEN:
     ADDITION_OPERATION = "addition operation"
     SUBTRACTION_OPERATION = "subtraction operation"
     MULTIPLICATION_OPERATION = "multiplication operation"
-    QUOTIENT_OPERATION = "quotation operation"
+    QUOTIENT_OPERATION = "quotient operation"
     MODULO_OPERATION = "modulo operation"
     MAX_OPERATION = "max operation"
     MIN_OPERATION = "min operation"
