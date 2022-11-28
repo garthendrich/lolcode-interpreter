@@ -358,7 +358,7 @@ class Parser:
 
         print(message)
 
-        # raise SyntaxError(message, syntaxErrorArgs)
+        raise SyntaxError(message, syntaxErrorArgs)
 
 
 class Node:
