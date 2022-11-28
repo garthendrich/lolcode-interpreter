@@ -111,13 +111,13 @@ class Parser:
     def _Operand(self):
         literal = self._Literal()
         if literal is not None:
-            return Node(ABSTRACTION.OUTPUT, literal)
+            return Node(ABSTRACTION.OPERAND, literal)
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            lexeme = self.lexemes.pop(0)
+            lexeme = self._popNext()
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
-        return
+        return None
 
     def _Literal(self):
         if self._nextTokenIs(TOKEN.BOOL_LITERAL):
