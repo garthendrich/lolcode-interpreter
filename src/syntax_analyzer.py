@@ -41,16 +41,7 @@ class Parser:
         self._throwSyntaxError('Missing starting keyword "HAI"')
 
     def _Statements(self):
-        statement = (
-            self._Declaration()
-            or self._Output()
-            or self._Addition()
-            or self._Subtraction()
-            or self._Multiplication()
-            or self._Division()
-            or self._Max()
-            or self._Min()
-        )
+        statement = self._Declaration() or self._Output() or self._TwoOperandOperation()
 
         if statement is None:
             self._throwSyntaxError("Statement error")
@@ -92,7 +83,7 @@ class Parser:
 
         return None
 
-    # ! one operand
+    # !! does not yet accept multiple operands
     def _Output(self):
         children = []
 
@@ -133,207 +124,45 @@ class Parser:
 
         return None
 
-    def _Addition(self):
+    # !!! does not yet accept nested operations
+    def _TwoOperandOperation(self):
         children = []
 
-        if not self._nextTokenIs(TOKEN.ADDITION_OPERATION):
-            return
-        self._moveNextTokenTo(children)
+        if (
+            self._nextTokenIs(TOKEN.ADDITION_OPERATION)
+            or self._nextTokenIs(TOKEN.SUBTRACTION_OPERATION)
+            or self._nextTokenIs(TOKEN.MULTIPLICATION_OPERATION)
+            or self._nextTokenIs(TOKEN.QUOTIENT_OPERATION)
+            or self._nextTokenIs(TOKEN.MODULO_OPERATION)
+            or self._nextTokenIs(TOKEN.MAX_OPERATION)
+            or self._nextTokenIs(TOKEN.MIN_OPERATION)
+            or self._nextTokenIs(TOKEN.AND_OPERATION)
+            or self._nextTokenIs(TOKEN.OR_OPERATION)
+            or self._nextTokenIs(TOKEN.XOR_OPERATION)
+        ):
+            self._moveNextTokenTo(children)
 
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
+            operand = self._Operand()
+            if operand is not None:
+                children.append(operand)
 
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
+                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                    self._moveNextTokenTo(children)
 
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
+                    operand = self._Operand()
+                    if operand is not None:
+                        children.append(operand)
 
-        return Node(ABSTRACTION.SUM, children)
+                        # !!! temporary node type
+                        return Node("operation", children)
 
-    def _Subtraction(self):
-        children = []
+                    self._throwSyntaxError("Expected an operand")
 
-        if not self._nextTokenIs(TOKEN.SUBTRACTION_OPERATION):
-            return
-        self._moveNextTokenTo(children)
+                self._throwSyntaxError('Missing keyword "AN"')
 
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
+            self._throwSyntaxError("Expected an operand")
 
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.DIFF, children)
-
-    def _Multiplication(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.MULTIPLICATION_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.MUL, children)
-
-    def _Division(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.QUOTIENT_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.DIV, children)
-
-    def _Max(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.MAX_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.MAX, children)
-
-    def _Min(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.MIN_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.MIN, children)
-
-    def _And(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.AND_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.AND, children)
-
-    def _Or(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.OR_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.OR, children)
-
-    def _Xor(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.XOR_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        if not self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.XOR, children)
-
-    def _Not(self):
-        children = []
-
-        if not self._nextTokenIs(TOKEN.NOT_OPERATION):
-            return
-        self._moveNextTokenTo(children)
-
-        operand = self._Operand()
-        if operand is not None:
-            children.append(operand)
-
-        return Node(ABSTRACTION.NOT, children)
+        return None
 
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (
@@ -342,8 +171,6 @@ class Parser:
             0,
             None,
         )
-
-        print(message)
 
         raise SyntaxError(message, syntaxErrorArgs)
 
