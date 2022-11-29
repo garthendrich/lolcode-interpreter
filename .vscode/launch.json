@@ -6,7 +6,7 @@
     "configurations": [
       {
         "name": "lolcode-interpreter",
-        "type": "python3",
+        "type": "python",
         "request": "launch",
         "program": "src/main.py",
         "console": "internalConsole",

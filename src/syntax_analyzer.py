@@ -51,6 +51,9 @@ class Parser:
             or self._RecastingAndAssignment()
             or self._IfStatement()
             or self._CaseStatement()
+            or self._LoopStatement()
+            or self._Input()
+            or self._nextTokenIs(TOKEN.LINEBREAK)
             )
 
         if statement is None:
@@ -68,6 +71,7 @@ class Parser:
                 and not self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD)
                 and not self._nextTokenIs(TOKEN.CASE_KEYWORD)
                 and not self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
+                and not self._nextTokenIs(TOKEN.LOOP_DELIMITER)
             ):
                 children.append(self._Statements())
 
@@ -111,7 +115,28 @@ class Parser:
                 self._throwSyntaxError("Expected an operand")
 
             children.append(operand)
+
+            while(not self._nextTokenIs(TOKEN.LINEBREAK)):
+                operand = self._Operand()
+                if operand is None:
+                    self._throwSyntaxError("Expected an operand")
+
+                children.append(operand)
+
             return Node(ABSTRACTION.OUTPUT, children)
+
+        return None
+
+    def _Input(self):
+        children = []
+
+        if self._nextTokenIs(TOKEN.INPUT_KEYWORD):
+            self._moveNextTokenTo(children)
+
+            if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+                self._moveNextTokenTo(children)
+
+                return Node(ABSTRACTION.INPUT, children)
 
         return None
 
@@ -124,7 +149,14 @@ class Parser:
             lexeme = self._popNext()
             return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
 
-        operationOperand = self._TwoOperandOperation()
+        operationOperand = (
+            self._TwoOperandOperation() 
+            or self._OneOperandOperation()
+            or self._MultipleOperandOperation()
+            or self._ComparisonOperation()
+            or self._ConcatOperation()
+            or self._ExplicitTypecast()
+        )
         if operationOperand is not None:
             return Node(ABSTRACTION.OPERAND, operationOperand)
 
@@ -184,6 +216,24 @@ class Parser:
 
         return None
 
+    def _OneOperandOperation(self):
+        children = []
+
+        if (
+            self._nextTokenIs(TOKEN.NOT_OPERATION)
+        ):
+            self._moveNextTokenTo(children)
+
+            operand = self._Operand()
+            if operand is not None:
+                children.append(operand)
+
+                return Node("operation", children)
+
+            self._throwSyntaxError("Expected an operand")
+
+        return None
+
     def _MultipleOperandOperation(self):
         children = []
 
@@ -212,11 +262,10 @@ class Parser:
                                 operand = self._Operand()
                                 if operand is not None:
                                     children.append(operand)
-                                else:
-                                    self._throwSyntaxError("Expected an operand")
-                                    return None
-                            else:
-                                break
+
+                                else: self._throwSyntaxError("Expected an operand")
+
+                            else: break
 
                         if self._nextTokenIs(TOKEN.INFINITE_ARITY_DELIMITER):
                             self._moveNextTokenTo(children)
@@ -260,11 +309,10 @@ class Parser:
                                 operand = self._Operand()
                                 if operand is not None:
                                     children.append(operand)
-                                else:
-                                    self._throwSyntaxError("Expected an operand")
-                                    return None
-                            else:
-                                break
+
+                                else: self._throwSyntaxError("Expected an operand")
+
+                            else: break
                         
                         return Node("concatenation operation", children)
 
@@ -283,7 +331,6 @@ class Parser:
             self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) 
             or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)
         ):
-
             self._moveNextTokenTo(children)
 
             operand = self._Operand()
@@ -293,10 +340,7 @@ class Parser:
                 if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
                     self._moveNextTokenTo(children)
 
-                    if(
-                        self._nextTokenIs(TOKEN.MIN_OPERATION)
-                        or self._nextTokenIs(TOKEN.MAX_OPERATION)
-                    ):
+                    if (self._nextTokenIs(TOKEN.MIN_OPERATION) or self._nextTokenIs(TOKEN.MAX_OPERATION)):
                         self._moveNextTokenTo(children)
 
                     operand = self._Operand()
@@ -343,18 +387,18 @@ class Parser:
                 self._moveNextTokenTo(children)
 
                 operand = self._Operand()
+                recastTypecast = self._ExplicitTypecast()
                 if operand is not None:
                     children.append(operand)
 
                     return Node("assignment statement", children)
 
-                recastTypecast = self._ExplicitTypecast()
-                if recastTypecast is not None:
+                elif recastTypecast is not None:
                     children.append(recastTypecast)
 
                     return Node("recast typecast", children)
 
-                self._throwSyntaxError("Expected operand")
+                else: self._throwSyntaxError("Expected operand")
 
             elif(self._nextTokenIs(TOKEN.RECASTING_KEYWORD)):
                 self._moveNextTokenTo(children)
@@ -399,9 +443,10 @@ class Parser:
                                     statement = self._Statements()
                                     if statement is not None:
                                         children.append(statement)
-                                    else:
-                                        self._throwSyntaxError('Missing statement')
-                                        return None
+
+                                    else:  self._throwSyntaxError('Missing statement')
+
+                                else: self._throwSyntaxError('Missing linebreak')
                             
                             if self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER):
                                 self._moveNextTokenTo(children)
@@ -457,8 +502,12 @@ class Parser:
                                                 statement = self._Statements()
                                                 if statement is not None:
                                                     children.append(statement)
-                                    else:
-                                        break
+
+                                                else: self._throwSyntaxError('Missing statement')
+
+                                            else: self._throwSyntaxError('Missing linebreak')
+
+                                    else: break
 
                                 if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
                                     self._moveNextTokenTo(children)
@@ -469,6 +518,10 @@ class Parser:
                                         statement = self._Statements()
                                         if statement is not None:
                                             children.append(statement)
+                                        
+                                        else: self._throwSyntaxError('Missing statement')
+
+                                    else: self._throwSyntaxError('Missing linebreak')
                                 
                                 if self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER):
                                     self._moveNextTokenTo(children)
@@ -478,14 +531,81 @@ class Parser:
                                 self._throwSyntaxError('Missing keyword "OIC"')
 
                             self._throwSyntaxError('Missing statement')
+
+                        self._throwSyntaxError('Missing linebreak')
                     
-                    self._throwSyntaxError('Missing linebreak')
+                    self._throwSyntaxError('Missing Operand')
                 
                 self._throwSyntaxError('Missing keyword "O RLY"')
 
             self._throwSyntaxError('Missing linebreak')
 
         return None
+
+    def _LoopStatement(self):
+        children = []
+
+        if (self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER)):
+            self._moveNextTokenTo(children)
+
+            if (self._nextTokenIs(TOKEN.LOOP_IDENTIFIER)):
+                self._moveNextTokenTo(children) 
+
+                if (self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(TOKEN.DECREMENT_KEYWORD)):
+                    self._moveNextTokenTo(children)
+
+                    if (self._nextTokenIs(TOKEN.KEYWORD_IN_LOOP)):
+                        self._moveNextTokenTo(children)
+
+                        if (self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER)):
+                            self._moveNextTokenTo(children)
+
+                            if (self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD)):
+                                self._moveNextTokenTo(children)
+
+                                troofExpression = (
+                                    self._ComparisonOperation
+                                     or self._TwoOperandOperation
+                                     or self._MultipleOperandOperation
+                                )
+                                if (troofExpression is not None):
+                                    children.append(troofExpression)
+
+                                else: self._throwSyntaxError('Missing Troof Expression')
+
+                            if self._nextTokenIs(TOKEN.LINEBREAK):
+                                self._moveNextTokenTo(children)
+
+                                statement = self._Statements()
+                                if statement is not None:
+                                    children.append(statement)
+
+                                    if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+                                        self._moveNextTokenTo(children)
+
+                                        if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
+                                            self._moveNextTokenTo(children)
+
+                                            return Node("loop statement", children)
+
+                                        self._throwSyntaxError('Missing Loop Identifier')
+
+                                    self._throwSyntaxError('Missing Loop Delimeter')
+
+                                self._throwSyntaxError('Missing statement')
+
+                            self._throwSyntaxError('Missing linebreak')
+
+                        self._throwSyntaxError('Missing Variable Identifier')
+
+                    self._throwSyntaxError('Missing keyword "YR"')
+
+                self._throwSyntaxError('Missing UPPIN/NERFIN keyword')
+
+            self._throwSyntaxError('Missing loop identifier')
+
+        return None
+
 
     def _throwSyntaxError(self, message):
         syntaxErrorArgs = (

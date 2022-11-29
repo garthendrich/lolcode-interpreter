@@ -4,6 +4,7 @@ class ABSTRACTION:
     DECLARATION = "declaration"
     OPERAND = 'operand'
     OUTPUT = 'output'
+    INPUT = 'input'
     LITERAL = 'literal'
     SUM = 'sum statement'
     DIFF = 'diff statement'
