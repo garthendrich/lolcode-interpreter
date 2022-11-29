@@ -71,7 +71,7 @@ class Lexer:
         return re.sub(r"\t", "", content)
 
     def _removeComments(self, content):
-        noSingleLineComments = re.sub(r"BTW .*\n", "", content)
+        noSingleLineComments = re.sub(r"BTW .*", "", content)
         return re.sub(r"(OBTW(?<=OBTW)(.|\n)*(?=TLDR)TLDR)", "", noSingleLineComments)
 
 
@@ -171,6 +171,7 @@ class Lexer:
             TOKEN.CASE_KEYWORD,
             TOKEN.KEYWORD_IN_LOOP,
             TOKEN.LOOP_CONDITION_KEYWORD,
+            TOKEN.VARIABLE_IDENTIFIER,
         ]
 
         loopIdentifierPrecedingLexemeTypes = [

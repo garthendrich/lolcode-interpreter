@@ -337,24 +337,39 @@ class Parser:
             if operand is not None:
                 children.append(operand)
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+            elif (self._nextTokenIs(TOKEN.MIN_OPERATION) or self._nextTokenIs(TOKEN.MAX_OPERATION)):
+                self._moveNextTokenTo(children)
 
-                    if (self._nextTokenIs(TOKEN.MIN_OPERATION) or self._nextTokenIs(TOKEN.MAX_OPERATION)):
-                        self._moveNextTokenTo(children)
+                operand = self._Operand()
+                if operand is not None:
+                    children.append(operand)
+                    
+                else: self._throwSyntaxError("Expected an operand")
+                  
+            else: self._throwSyntaxError("Expected an operand")
+
+            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                self._moveNextTokenTo(children)
+
+                operand = self._Operand()
+                if operand is not None:
+                    children.append(operand)
+            
+                elif (self._nextTokenIs(TOKEN.MIN_OPERATION) or self._nextTokenIs(TOKEN.MAX_OPERATION)):
+                    self._moveNextTokenTo(children)
 
                     operand = self._Operand()
                     if operand is not None:
                         children.append(operand)
-                        
-                        return Node("comparison operation", children)
 
-                    self._throwSyntaxError("Expected an operand")
+                    else: self._throwSyntaxError("Expected an operand")
+                
+                else: self._throwSyntaxError("Expected an operand")
 
-                self._throwSyntaxError('Missing keyword "AN"')
+                return Node("comparison operation", children)
 
-            self._throwSyntaxError("Expected an operand")
-
+            self._throwSyntaxError('Missing keyword "AN"')
+            
         return None
 
     def _ExplicitTypecast(self):
