@@ -74,7 +74,6 @@ class Lexer:
         noSingleLineComments = re.sub(r"BTW .*", "", content)
         return re.sub(r"(OBTW(?<=OBTW)(.|\n)*(?=TLDR)TLDR)", "", noSingleLineComments)
 
-
     def _tokenizeSourceCode(self, sourceCode):
         for lineIndex, line in enumerate(sourceCode.split("\n")):
             self.currentLineNumber = lineIndex + 1
@@ -187,6 +186,8 @@ class Lexer:
             return TOKEN.LOOP_IDENTIFIER
 
         self._throwSyntaxError("Unexpected token")
+
+
 class Token:
     def __init__(self, lexeme, lexemeType):
         self.lexeme = lexeme
