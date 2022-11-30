@@ -327,49 +327,44 @@ class Parser:
     def _ComparisonOperation(self):
         children = []
 
-        if (
-            self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) 
-            or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)
-        ):
+        if (self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)):
             self._moveNextTokenTo(children)
 
             operand = self._Operand()
             if operand is not None:
                 children.append(operand)
 
-            elif (self._nextTokenIs(TOKEN.MIN_OPERATION) or self._nextTokenIs(TOKEN.MAX_OPERATION)):
-                self._moveNextTokenTo(children)
-
-                operand = self._Operand()
-                if operand is not None:
-                    children.append(operand)
-                    
-                else: self._throwSyntaxError("Expected an operand")
-                  
-            else: self._throwSyntaxError("Expected an operand")
-
-            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                self._moveNextTokenTo(children)
-
-                operand = self._Operand()
-                if operand is not None:
-                    children.append(operand)
-            
-                elif (self._nextTokenIs(TOKEN.MIN_OPERATION) or self._nextTokenIs(TOKEN.MAX_OPERATION)):
+                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
                     self._moveNextTokenTo(children)
 
+                    if (self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(TOKEN.MIN_OPERATION)):
+                        self._moveNextTokenTo(children)
+
+                        operand = self._Operand()
+                        if operand is not None:
+                            children.append(operand)
+
+                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                                self._moveNextTokenTo(children)
+
+                                operand = self._Operand()
+                                if operand is not None:
+                                    children.append(operand)
+
+                            return Node("comparison operation", children)
+                
                     operand = self._Operand()
                     if operand is not None:
                         children.append(operand)
 
-                    else: self._throwSyntaxError("Expected an operand")
+                        return Node("comparison operation", children)
+
+                    self._throwSyntaxError("Expected an operand")
                 
-                else: self._throwSyntaxError("Expected an operand")
+                self._throwSyntaxError('Missing keyword "AN"')
 
-                return Node("comparison operation", children)
+            self._throwSyntaxError("Expected an operand")
 
-            self._throwSyntaxError('Missing keyword "AN"')
-            
         return None
 
     def _ExplicitTypecast(self):
