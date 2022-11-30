@@ -54,31 +54,24 @@ class Parser:
             or self._CaseStatement()
             or self._LoopStatement()
             or self._Input()
-            or self._nextTokenIs(TOKEN.LINEBREAK)
         )
 
         if statement is None:
-            self._throwSyntaxError("Statement error")
+            return None
 
         children = [statement]
 
-        if self._nextTokenIs(TOKEN.LINEBREAK):
+        if not self._nextTokenIs(TOKEN.LINEBREAK):
+            self._throwSyntaxError("Unexpected keyword")
+
+        while self._nextTokenIs(TOKEN.LINEBREAK):
             self._moveNextTokenTo(children)
 
-            # if not yet end of source code
-            if (
-                not self._nextTokenIs(TOKEN.CODE_DELIMITER)
-                and not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
-                and not self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD)
-                and not self._nextTokenIs(TOKEN.CASE_KEYWORD)
-                and not self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
-                and not self._nextTokenIs(TOKEN.LOOP_DELIMITER)
-            ):
-                children.append(self._Statements())
+        nextLineStatements = self._Statements()
+        if nextLineStatements is not None:
+            children.append(nextLineStatements)
 
-            return Node(ABSTRACTION.STATEMENT, children)
-
-        self._throwSyntaxError("Unexpected keyword")
+        return Node(ABSTRACTION.STATEMENT, children)
 
     def _Declaration(self):
         children = []
