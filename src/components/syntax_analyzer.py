@@ -10,9 +10,15 @@ class Parser:
         return self._Program()
 
     def _nextTokenIs(self, tokenType):
+        if isEmpty(self.lexemes):
+            self._throwSyntaxError("Unexpected end of line")
+
         return self.lexemes[0].lexemeType == tokenType
 
     def _popNext(self):
+        if isEmpty(self.lexemes):
+            self._throwSyntaxError("Unexpected end of line")
+
         return self.lexemes.pop(0)
 
     def _moveNextTokenTo(self, list):
