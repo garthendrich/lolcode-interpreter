@@ -5,8 +5,6 @@ from .token_enum import TOKEN
 
 class Lexer:
     def __init__(self):
-        self.lexemes = []
-
         self.patternTypes = {
             r"^HAI$": TOKEN.CODE_DELIMITER,
             r"^KTHXBYE$": TOKEN.CODE_DELIMITER,
@@ -62,6 +60,8 @@ class Lexer:
         }
 
     def process(self, content):
+        self.lexemes = []
+
         content = self._removeIndents(content)
         content = self._removeComments(content)
         self._tokenizeSourceCode(content)
