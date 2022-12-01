@@ -611,21 +611,17 @@ class Parser:
                                 if statement is not None:
                                     children.append(statement)
 
-                                    if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+                                if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+                                    self._moveNextTokenTo(children)
+
+                                    if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
                                         self._moveNextTokenTo(children)
 
-                                        if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                                            self._moveNextTokenTo(children)
+                                        return Node("loop statement", children)
 
-                                            return Node("loop statement", children)
+                                    self._throwSyntaxError("Missing Loop Identifier")
 
-                                        self._throwSyntaxError(
-                                            "Missing Loop Identifier"
-                                        )
-
-                                    self._throwSyntaxError("Missing Loop Delimeter")
-
-                                self._throwSyntaxError("Missing statement")
+                                self._throwSyntaxError("Missing Loop Delimeter")
 
                             self._throwSyntaxError("Missing linebreak")
 
