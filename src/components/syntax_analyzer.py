@@ -23,7 +23,7 @@ class Parser:
             self._throwSyntaxError(errorMessage)
 
     def _assign(self, identifier, value):
-        self._memory[identifier] = value
+        self.memory[identifier] = value
 
     # remove after reimplementation
     def _moveNextTokenTo(self, list):
@@ -32,7 +32,7 @@ class Parser:
     def parse(self, lexemes):
         self.lexemes = lexemes
 
-        self._memory = {}
+        self.memory = {}
 
         return self._Program()
 
@@ -71,28 +71,29 @@ class Parser:
             self._Statements()
 
     def _Declaration(self):
-        children = []
-
         if self._nextTokenIs(TOKEN.VARIABLE_DECLARATION):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                self._moveNextTokenTo(children)
+                variableIdentifierToken = self._popNext()
+                variableIdentifier = variableIdentifierToken.lexeme
+                value = None
 
                 if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
-                    self._moveNextTokenTo(children)
+                    self._popNext()
 
-                    operand = self._Operand()
-                    if operand is None:
+                    # temporary return value
+                    # test declaration with value after fixing return value
+                    value = self._Operand()
+                    if value is None:
                         self._throwSyntaxError("Expected an expression")
 
-                    children.append(operand)
-
-                return Node(ABSTRACTION.DECLARATION, children)
+                self._assign(variableIdentifier, value)
+                return True
 
             self._throwSyntaxError("Expected a variable identifier")
 
-        return None
+        return False
 
     # !! does not yet accept multiple operands
     def _Output(self):
@@ -637,6 +638,7 @@ class Parser:
         raise SyntaxError(message, syntaxErrorArgs)
 
 
+# remove after reimplementation
 class Node:
     def __init__(self, type, children: list):
         self.type = type
