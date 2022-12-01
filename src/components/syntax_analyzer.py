@@ -38,8 +38,13 @@ class Parser:
 
     def _Program(self):
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
+
         self._expectNext(TOKEN.LINEBREAK, "Missing linebreak")
+        while self._nextTokenIs(TOKEN.LINEBREAK):
+            self._popNext()
+
         self._Statements()
+
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "KTHXBYE"')
 
     def _Statements(self):
