@@ -68,3 +68,111 @@ class TestLoopAbstraction(unittest.TestCase):
             parser.parse(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
+
+    def test_no_name(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_no_increment_decrement(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_no_yr(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_no_variable(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN YR WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_incomplete_condition(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN YR num2 BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN YR num2 WILE 
+                VISIBLE num2
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_allow_no_statement(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+            IM OUTTA YR asc
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+    def test_no_closing(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            asc
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_no_closing_name(self):
+        lexemes = lexer.process(
+            """HAI
+            IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
+                VISIBLE num2
+            IM OUTTA YR
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
