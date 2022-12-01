@@ -16,6 +16,13 @@ class Parser:
         if isEmpty(self.lexemes):
             self._throwSyntaxError("Unexpected end of line")
 
+    def _expectNext(self, tokenType, errorMessage):
+        if self._nextTokenIs(tokenType):
+            self._popNext()
+        else:
+            self._throwSyntaxError(errorMessage)
+
+    # remove after reimplementation
     def _moveNextTokenTo(self, list):
         list.append(self._popNext())
 
@@ -25,26 +32,10 @@ class Parser:
         return self._Program()
 
     def _Program(self):
-        children = []
-
-        if self._nextTokenIs(TOKEN.CODE_DELIMITER):
-            self._moveNextTokenTo(children)
-
-            if self._nextTokenIs(TOKEN.LINEBREAK):
-                self._moveNextTokenTo(children)
-
-                children.append(self._Statements())
-
-                if self._nextTokenIs(TOKEN.CODE_DELIMITER):
-                    self._moveNextTokenTo(children)
-
-                    return Node(ABSTRACTION.PROGRAM, children)
-
-                self._throwSyntaxError('Missing starting keyword "KTHXBYE"')
-
-            self._throwSyntaxError("Unexpected keyword")
-
-        self._throwSyntaxError('Missing starting keyword "HAI"')
+        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
+        self._expectNext(TOKEN.LINEBREAK, "Missing linebreak")
+        self._Statements()
+        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "KTHXBYE"')
 
     def _Statements(self):
         statement = (
