@@ -19,6 +19,18 @@ class TestProgramAbstraction(unittest.TestCase):
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
+    def test_valid_program(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
     def test_no_hai(self):
         lexemes = lexer.process("KTHXBYE")
 
@@ -55,7 +67,7 @@ class TestProgramAbstraction(unittest.TestCase):
 
 
 class TestLoopAbstraction(unittest.TestCase):
-    def test_loop(self):
+    def test_valid_loop(self):
         lexemes = lexer.process(
             """HAI
             IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
