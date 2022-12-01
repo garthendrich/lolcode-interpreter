@@ -50,14 +50,6 @@ class TestProgramAbstraction(unittest.TestCase):
             parser.parse(lexemes)
 
         lexemes = lexer.process(
-            """HAI
-        VISIBLE 1 KTHXBYE"""
-        )
-
-        with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
-
-        lexemes = lexer.process(
             """HAI VISIBLE 1
         KTHXBYE"""
         )
@@ -71,8 +63,6 @@ class TestProgramAbstraction(unittest.TestCase):
 
 
             VISIBLE 1
-
-
         KTHXBYE"""
         )
 
@@ -89,6 +79,29 @@ class TestStatementsAbstraction(unittest.TestCase):
             VISIBLE 1
             VISIBLE 2
             VISIBLE 3
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+    def test_no_newlines(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1 KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_extra_newlines(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1
+
+
         KTHXBYE"""
         )
 
