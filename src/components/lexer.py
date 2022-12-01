@@ -144,48 +144,13 @@ class Lexer:
         return re.match(r"^[a-zA-Z]\w*$", word)
 
     def _getIdentifierTypeBasedOn(self, previousLexemeType):
-        variableIdentifierPrecedingLexemeTypes = [
-            TOKEN.VARIABLE_DECLARATION,
-            TOKEN.VARIABLE_ASSIGNMENT,
-            TOKEN.ADDITION_OPERATION,
-            TOKEN.SUBTRACTION_OPERATION,
-            TOKEN.MULTIPLICATION_OPERATION,
-            TOKEN.QUOTIENT_OPERATION,
-            TOKEN.MODULO_OPERATION,
-            TOKEN.MAX_OPERATION,
-            TOKEN.MIN_OPERATION,
-            TOKEN.AND_OPERATION,
-            TOKEN.OR_OPERATION,
-            TOKEN.XOR_OPERATION,
-            TOKEN.NOT_OPERATION,
-            TOKEN.INFINITE_ARITY_AND_OPERATION,
-            TOKEN.INFINITE_ARITY_OR_OPERATION,
-            TOKEN.EQUAL_TO_OPERATION,
-            TOKEN.NOT_EQUAL_TO_OPERATION,
-            TOKEN.CONCATENATION_OPERATION,
-            TOKEN.EXPLICIT_TYPECASTING_KEYWORD,
-            TOKEN.OPERAND_SEPARATOR,
-            TOKEN.OUTPUT_KEYWORD,
-            TOKEN.INPUT_KEYWORD,
-            TOKEN.CASE_KEYWORD,
-            TOKEN.KEYWORD_IN_LOOP,
-            TOKEN.LOOP_CONDITION_KEYWORD,
-            TOKEN.VARIABLE_IDENTIFIER,
-        ]
-
-        loopIdentifierPrecedingLexemeTypes = [
+        if previousLexemeType in [
             TOKEN.LOOP_DECLARATION_AND_DELIMITER,
             TOKEN.LOOP_DELIMITER,
-        ]
-
-        if previousLexemeType == None:
-            return TOKEN.VARIABLE_IDENTIFIER
-        if previousLexemeType in variableIdentifierPrecedingLexemeTypes:
-            return TOKEN.VARIABLE_IDENTIFIER
-        if previousLexemeType in loopIdentifierPrecedingLexemeTypes:
+        ]:
             return TOKEN.LOOP_IDENTIFIER
 
-        self._throwSyntaxError("Unexpected token")
+        return TOKEN.VARIABLE_IDENTIFIER
 
 
 class Token:
