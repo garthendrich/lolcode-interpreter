@@ -111,6 +111,20 @@ class TestStatementsAbstraction(unittest.TestCase):
             self.fail("Unexpected syntax error")
 
 
+class TestOutputAbstraction(unittest.TestCase):
+    def test_valid_multi_operand_output(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE one 2 "three" 4.0 five 6 "7" 8.9 WIN
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+
 class TestLoopAbstraction(unittest.TestCase):
     def test_valid_loop(self):
         lexemes = lexer.process(
