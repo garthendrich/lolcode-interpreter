@@ -594,9 +594,9 @@ class Parser:
                                 self._moveNextTokenTo(children)
 
                                 troofExpression = (
-                                    self._ComparisonOperation
-                                    or self._TwoOperandOperation
-                                    or self._MultipleOperandOperation
+                                    self._ComparisonOperation()
+                                    or self._TwoOperandOperation()
+                                    or self._MultipleOperandOperation()
                                 )
                                 if troofExpression is not None:
                                     children.append(troofExpression)
