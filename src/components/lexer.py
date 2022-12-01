@@ -1,6 +1,6 @@
 import re
 
-from token_enum import TOKEN
+from .token_enum import TOKEN
 
 
 class Lexer:

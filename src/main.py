@@ -1,8 +1,18 @@
-from tkinter import *
-from tkinter import filedialog
-from tkinter import ttk
-from lexer import *
-from syntax_analyzer import Node, Parser
+from tkinter import (
+    END,
+    RIGHT,
+    VERTICAL,
+    Button,
+    Frame,
+    Label,
+    Text,
+    Tk,
+    filedialog,
+    ttk,
+)
+
+from components.lexer import Lexer, Token
+from components.syntax_analyzer import Node, Parser
 
 
 def main():

@@ -1,6 +1,6 @@
-from abstractions import ABSTRACTION
-from token_enum import TOKEN
-from utils import isEmpty
+from .abstractions import ABSTRACTION
+from .token_enum import TOKEN
+from .utils import isEmpty
 
 
 class Parser:
