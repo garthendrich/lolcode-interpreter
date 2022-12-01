@@ -65,6 +65,22 @@ class TestProgramAbstraction(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             parser.parse(lexemes)
 
+    def test_extra_newlines(self):
+        lexemes = lexer.process(
+            """HAI
+
+
+            VISIBLE 1
+
+
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
 
 class TestStatementsAbstraction(unittest.TestCase):
     def test_valid_multiline_statements(self):
