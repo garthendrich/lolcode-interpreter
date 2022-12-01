@@ -22,12 +22,17 @@ class Parser:
         else:
             self._throwSyntaxError(errorMessage)
 
+    def _assign(self, identifier, value):
+        self._memory[identifier] = value
+
     # remove after reimplementation
     def _moveNextTokenTo(self, list):
         list.append(self._popNext())
 
     def parse(self, lexemes):
         self.lexemes = lexemes
+
+        self._memory = {}
 
         return self._Program()
 
@@ -38,7 +43,7 @@ class Parser:
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "KTHXBYE"')
 
     def _Statements(self):
-        statement = (
+        didGetAStatement = (
             self._Declaration()
             or self._Output()
             or self._TwoOperandOperation()
@@ -53,22 +58,12 @@ class Parser:
             or self._Input()
         )
 
-        if statement is None:
-            return None
+        if didGetAStatement:
+            self._expectNext(TOKEN.LINEBREAK, "Expected linebreak")
+            while self._nextTokenIs(TOKEN.LINEBREAK):
+                self._popNext()
 
-        children = [statement]
-
-        if not self._nextTokenIs(TOKEN.LINEBREAK):
-            self._throwSyntaxError("Unexpected keyword")
-
-        while self._nextTokenIs(TOKEN.LINEBREAK):
-            self._moveNextTokenTo(children)
-
-        nextLineStatements = self._Statements()
-        if nextLineStatements is not None:
-            children.append(nextLineStatements)
-
-        return Node(ABSTRACTION.STATEMENT, children)
+            self._Statements()
 
     def _Declaration(self):
         children = []
