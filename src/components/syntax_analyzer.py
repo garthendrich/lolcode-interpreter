@@ -4,25 +4,25 @@ from .utils import isEmpty
 
 
 class Parser:
+    def _nextTokenIs(self, tokenType):
+        self._catchEndOfLine()
+        return self.lexemes[0].lexemeType == tokenType
+
+    def _popNext(self):
+        self._catchEndOfLine()
+        return self.lexemes.pop(0)
+
+    def _catchEndOfLine(self):
+        if isEmpty(self.lexemes):
+            self._throwSyntaxError("Unexpected end of line")
+
+    def _moveNextTokenTo(self, list):
+        list.append(self._popNext())
+
     def parse(self, lexemes):
         self.lexemes = lexemes
 
         return self._Program()
-
-    def _nextTokenIs(self, tokenType):
-        if isEmpty(self.lexemes):
-            self._throwSyntaxError("Unexpected end of line")
-
-        return self.lexemes[0].lexemeType == tokenType
-
-    def _popNext(self):
-        if isEmpty(self.lexemes):
-            self._throwSyntaxError("Unexpected end of line")
-
-        return self.lexemes.pop(0)
-
-    def _moveNextTokenTo(self, list):
-        list.append(self._popNext())
 
     def _Program(self):
         children = []
