@@ -31,9 +31,9 @@ class Parser:
 
         self._throwError(NameError, f"{identifier} is not defined")
 
-    # remove after reimplementation
-    def _moveNextTokenTo(self, list):
-        list.append(self._popNext())
+    # # !!! remove after reimplementation
+    # def _moveNextTokenTo(self, list):
+    #     list.append(self._popNext())
 
     def _throwError(self, errorType, message):
         errorArgs = (
@@ -66,17 +66,17 @@ class Parser:
     def _Statements(self):
         statement = (
             self._Declaration()
-            or self._Output()
+            # or self._Output()
             or self._TwoOperandOperation()
             or self._MultipleOperandOperation()
-            or self._ConcatOperation()
-            or self._ComparisonOperation()
-            or self._ExplicitTypecast()
-            or self._RecastingAndAssignment()
-            or self._IfStatement()
-            or self._CaseStatement()
-            or self._LoopStatement()
-            or self._Input()
+            # or self._ConcatOperation()
+            # or self._ComparisonOperation()
+            # or self._ExplicitTypecast()
+            # or self._RecastingAndAssignment()
+            # or self._IfStatement()
+            # or self._CaseStatement()
+            # or self._LoopStatement()
+            # or self._Input()
         )
 
         if statement is not None:
@@ -109,41 +109,41 @@ class Parser:
 
         return None
 
-    def _Output(self):
-        children = []
+    # def _Output(self):
+    #     children = []
 
-        if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
-            self._moveNextTokenTo(children)
+    #     if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
+    #         self._moveNextTokenTo(children)
 
-            operand = self._Operand()
-            if operand is None:
-                self._throwError(SyntaxError, "Expected an operand")
+    #         operand = self._Operand()
+    #         if operand is None:
+    #             self._throwError(SyntaxError, "Expected an operand")
 
-            children.append(operand)
+    #         children.append(operand)
 
-            while not self._nextTokenIs(TOKEN.LINEBREAK):
-                operand = self._Operand()
-                if operand is None:
-                    self._throwError(SyntaxError, "Expected an operand")
+    #         while not self._nextTokenIs(TOKEN.LINEBREAK):
+    #             operand = self._Operand()
+    #             if operand is None:
+    #                 self._throwError(SyntaxError, "Expected an operand")
 
-                children.append(operand)
+    #             children.append(operand)
 
-            return Node(ABSTRACTION.OUTPUT, children)
+    #         return Node(ABSTRACTION.OUTPUT, children)
 
-        return None
+    #     return None
 
-    def _Input(self):
-        children = []
+    # def _Input(self):
+    #     children = []
 
-        if self._nextTokenIs(TOKEN.INPUT_KEYWORD):
-            self._moveNextTokenTo(children)
+    #     if self._nextTokenIs(TOKEN.INPUT_KEYWORD):
+    #         self._moveNextTokenTo(children)
 
-            if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                self._moveNextTokenTo(children)
+    #         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+    #             self._moveNextTokenTo(children)
 
-                return Node(ABSTRACTION.INPUT, children)
+    #             return Node(ABSTRACTION.INPUT, children)
 
-        return None
+    #     return None
 
     def _Operand(self):
         literalValue = self._Literal()
@@ -312,373 +312,374 @@ class Parser:
 
         return None
 
-    def _ConcatOperation(self):
-        children = []
 
-        if self._nextTokenIs(TOKEN.CONCATENATION_OPERATION):
+#     def _ConcatOperation(self):
+#         children = []
 
-            self._moveNextTokenTo(children)
+#         if self._nextTokenIs(TOKEN.CONCATENATION_OPERATION):
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+#             self._moveNextTokenTo(children)
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+#             operand = self._Operand()
+#             if operand is not None:
+#                 children.append(operand)
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+#                 if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+#                     self._moveNextTokenTo(children)
 
-                        while True:
-                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                                self._moveNextTokenTo(children)
+#                     operand = self._Operand()
+#                     if operand is not None:
+#                         children.append(operand)
 
-                                operand = self._Operand()
-                                if operand is not None:
-                                    children.append(operand)
+#                         while True:
+#                             if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+#                                 self._moveNextTokenTo(children)
 
-                                else:
-                                    self._throwError(SyntaxError, "Expected an operand")
+#                                 operand = self._Operand()
+#                                 if operand is not None:
+#                                     children.append(operand)
 
-                            else:
-                                break
+#                                 else:
+#                                     self._throwError(SyntaxError, "Expected an operand")
 
-                        return Node("concatenation operation", children)
+#                             else:
+#                                 break
 
-                    self._throwError(SyntaxError, "Expected an operand")
+#                         return Node("concatenation operation", children)
 
-                self._throwError(SyntaxError, 'Missing keyword "AN"')
+#                     self._throwError(SyntaxError, "Expected an operand")
 
-            self._throwError(SyntaxError, "Expected an operand")
+#                 self._throwError(SyntaxError, 'Missing keyword "AN"')
 
-        return None
+#             self._throwError(SyntaxError, "Expected an operand")
 
-    def _ComparisonOperation(self):
-        children = []
+#         return None
 
-        if self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) or self._nextTokenIs(
-            TOKEN.NOT_EQUAL_TO_OPERATION
-        ):
-            self._moveNextTokenTo(children)
+#     def _ComparisonOperation(self):
+#         children = []
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+#         if self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) or self._nextTokenIs(
+#             TOKEN.NOT_EQUAL_TO_OPERATION
+#         ):
+#             self._moveNextTokenTo(children)
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+#             operand = self._Operand()
+#             if operand is not None:
+#                 children.append(operand)
 
-                    if self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(
-                        TOKEN.MIN_OPERATION
-                    ):
-                        self._moveNextTokenTo(children)
+#                 if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+#                     self._moveNextTokenTo(children)
 
-                        operand = self._Operand()
-                        if operand is not None:
-                            children.append(operand)
+#                     if self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(
+#                         TOKEN.MIN_OPERATION
+#                     ):
+#                         self._moveNextTokenTo(children)
 
-                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                                self._moveNextTokenTo(children)
+#                         operand = self._Operand()
+#                         if operand is not None:
+#                             children.append(operand)
 
-                                operand = self._Operand()
-                                if operand is not None:
-                                    children.append(operand)
+#                             if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+#                                 self._moveNextTokenTo(children)
 
-                            return Node("comparison operation", children)
+#                                 operand = self._Operand()
+#                                 if operand is not None:
+#                                     children.append(operand)
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+#                             return Node("comparison operation", children)
 
-                        return Node("comparison operation", children)
+#                     operand = self._Operand()
+#                     if operand is not None:
+#                         children.append(operand)
 
-                    self._throwError(SyntaxError, "Expected an operand")
+#                         return Node("comparison operation", children)
 
-                self._throwError(SyntaxError, 'Missing keyword "AN"')
+#                     self._throwError(SyntaxError, "Expected an operand")
 
-            self._throwError(SyntaxError, "Expected an operand")
+#                 self._throwError(SyntaxError, 'Missing keyword "AN"')
 
-        return None
+#             self._throwError(SyntaxError, "Expected an operand")
 
-    def _ExplicitTypecast(self):
-        children = []
+#         return None
 
-        if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
-            self._moveNextTokenTo(children)
+#     def _ExplicitTypecast(self):
+#         children = []
 
-            if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                self._moveNextTokenTo(children)
+#         if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
+#             self._moveNextTokenTo(children)
 
-                if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-                    self._moveNextTokenTo(children)
+#             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+#                 self._moveNextTokenTo(children)
 
-                    return Node("explicit typecast operation", children)
+#                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
+#                     self._moveNextTokenTo(children)
 
-                self._throwError(SyntaxError, "Expected a type literal")
+#                     return Node("explicit typecast operation", children)
 
-            self._throwError(SyntaxError, "Expected a variable identifier")
+#                 self._throwError(SyntaxError, "Expected a type literal")
 
-        return None
+#             self._throwError(SyntaxError, "Expected a variable identifier")
 
-    def _RecastingAndAssignment(self):
-        children = []
+#         return None
 
-        if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            self._moveNextTokenTo(children)
+#     def _RecastingAndAssignment(self):
+#         children = []
 
-            if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
-                self._moveNextTokenTo(children)
+#         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+#             self._moveNextTokenTo(children)
 
-                operand = self._Operand()
-                recastTypecast = self._ExplicitTypecast()
-                if operand is not None:
-                    children.append(operand)
+#             if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
+#                 self._moveNextTokenTo(children)
 
-                    return Node("assignment statement", children)
+#                 operand = self._Operand()
+#                 recastTypecast = self._ExplicitTypecast()
+#                 if operand is not None:
+#                     children.append(operand)
 
-                elif recastTypecast is not None:
-                    children.append(recastTypecast)
+#                     return Node("assignment statement", children)
 
-                    return Node("recast typecast", children)
+#                 elif recastTypecast is not None:
+#                     children.append(recastTypecast)
 
-                else:
-                    self._throwError(SyntaxError, "Expected operand")
+#                     return Node("recast typecast", children)
 
-            elif self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
-                self._moveNextTokenTo(children)
+#                 else:
+#                     self._throwError(SyntaxError, "Expected operand")
 
-                if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-                    self._moveNextTokenTo(children)
+#             elif self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
+#                 self._moveNextTokenTo(children)
 
-                    return Node("recast typecast", children)
+#                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
+#                     self._moveNextTokenTo(children)
 
-                self._throwError(SyntaxError, "Expected operand")
+#                     return Node("recast typecast", children)
 
-            self._throwError(SyntaxError, "Expected assignment keyword")
+#                 self._throwError(SyntaxError, "Expected operand")
 
-        return None
+#             self._throwError(SyntaxError, "Expected assignment keyword")
 
-    def _IfStatement(self):
-        children = []
+#         return None
 
-        if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
-            self._moveNextTokenTo(children)
+#     def _IfStatement(self):
+#         children = []
 
-            if self._nextTokenIs(TOKEN.LINEBREAK):
-                self._moveNextTokenTo(children)
+#         if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
+#             self._moveNextTokenTo(children)
 
-                if self._nextTokenIs(TOKEN.IF_STATEMENT_KEYWORD):
-                    self._moveNextTokenTo(children)
+#             if self._nextTokenIs(TOKEN.LINEBREAK):
+#                 self._moveNextTokenTo(children)
 
-                    if self._nextTokenIs(TOKEN.LINEBREAK):
-                        self._moveNextTokenTo(children)
+#                 if self._nextTokenIs(TOKEN.IF_STATEMENT_KEYWORD):
+#                     self._moveNextTokenTo(children)
 
-                        statement = self._Statements()
-                        if statement is not None:
-                            children.append(statement)
+#                     if self._nextTokenIs(TOKEN.LINEBREAK):
+#                         self._moveNextTokenTo(children)
 
-                            if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
-                                self._moveNextTokenTo(children)
+#                         statement = self._Statements()
+#                         if statement is not None:
+#                             children.append(statement)
 
-                                if self._nextTokenIs(TOKEN.LINEBREAK):
-                                    self._moveNextTokenTo(children)
+#                             if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
+#                                 self._moveNextTokenTo(children)
 
-                                    statement = self._Statements()
-                                    if statement is not None:
-                                        children.append(statement)
+#                                 if self._nextTokenIs(TOKEN.LINEBREAK):
+#                                     self._moveNextTokenTo(children)
 
-                                    else:
-                                        self._throwError(
-                                            SyntaxError, "Missing statement"
-                                        )
+#                                     statement = self._Statements()
+#                                     if statement is not None:
+#                                         children.append(statement)
 
-                                else:
-                                    self._throwError(SyntaxError, "Missing linebreak")
+#                                     else:
+#                                         self._throwError(
+#                                             SyntaxError, "Missing statement"
+#                                         )
 
-                            if self._nextTokenIs(
-                                TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
-                            ):
-                                self._moveNextTokenTo(children)
+#                                 else:
+#                                     self._throwError(SyntaxError, "Missing linebreak")
 
-                                return Node("if statement operation", children)
+#                             if self._nextTokenIs(
+#                                 TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
+#                             ):
+#                                 self._moveNextTokenTo(children)
 
-                            self._throwError(SyntaxError, 'Missing keyword "OIC"')
+#                                 return Node("if statement operation", children)
 
-                        self._throwError(SyntaxError, "Missing statement")
+#                             self._throwError(SyntaxError, 'Missing keyword "OIC"')
 
-                    self._throwError(SyntaxError, "Missing linebreak")
+#                         self._throwError(SyntaxError, "Missing statement")
 
-                self._throwError(SyntaxError, 'Missing keyword "O RLY"')
+#                     self._throwError(SyntaxError, "Missing linebreak")
 
-            self._throwError(SyntaxError, "Missing linebreak")
+#                 self._throwError(SyntaxError, 'Missing keyword "O RLY"')
 
-        return None
+#             self._throwError(SyntaxError, "Missing linebreak")
 
-    def _CaseStatement(self):
-        children = []
+#         return None
 
-        if self._nextTokenIs(TOKEN.SWITCH_CASE_STATEMENT_DELIMITER):
-            self._moveNextTokenTo(children)
+#     def _CaseStatement(self):
+#         children = []
 
-            if self._nextTokenIs(TOKEN.LINEBREAK):
-                self._moveNextTokenTo(children)
+#         if self._nextTokenIs(TOKEN.SWITCH_CASE_STATEMENT_DELIMITER):
+#             self._moveNextTokenTo(children)
 
-                if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-                    self._moveNextTokenTo(children)
+#             if self._nextTokenIs(TOKEN.LINEBREAK):
+#                 self._moveNextTokenTo(children)
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+#                 if self._nextTokenIs(TOKEN.CASE_KEYWORD):
+#                     self._moveNextTokenTo(children)
 
-                        if self._nextTokenIs(TOKEN.LINEBREAK):
-                            self._moveNextTokenTo(children)
+#                     operand = self._Operand()
+#                     if operand is not None:
+#                         children.append(operand)
 
-                            statement = self._Statements()
-                            if statement is not None:
-                                children.append(statement)
+#                         if self._nextTokenIs(TOKEN.LINEBREAK):
+#                             self._moveNextTokenTo(children)
 
-                                while True:
-                                    if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-                                        self._moveNextTokenTo(children)
+#                             statement = self._Statements()
+#                             if statement is not None:
+#                                 children.append(statement)
 
-                                        operand = self._Operand()
-                                        if operand is not None:
-                                            children.append(operand)
+#                                 while True:
+#                                     if self._nextTokenIs(TOKEN.CASE_KEYWORD):
+#                                         self._moveNextTokenTo(children)
 
-                                            if self._nextTokenIs(TOKEN.LINEBREAK):
-                                                self._moveNextTokenTo(children)
+#                                         operand = self._Operand()
+#                                         if operand is not None:
+#                                             children.append(operand)
 
-                                                statement = self._Statements()
-                                                if statement is not None:
-                                                    children.append(statement)
+#                                             if self._nextTokenIs(TOKEN.LINEBREAK):
+#                                                 self._moveNextTokenTo(children)
 
-                                                else:
-                                                    self._throwError(
-                                                        SyntaxError, "Missing statement"
-                                                    )
+#                                                 statement = self._Statements()
+#                                                 if statement is not None:
+#                                                     children.append(statement)
 
-                                            else:
-                                                self._throwError(
-                                                    SyntaxError, "Missing linebreak"
-                                                )
+#                                                 else:
+#                                                     self._throwError(
+#                                                         SyntaxError, "Missing statement"
+#                                                     )
 
-                                    else:
-                                        break
+#                                             else:
+#                                                 self._throwError(
+#                                                     SyntaxError, "Missing linebreak"
+#                                                 )
 
-                                if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
-                                    self._moveNextTokenTo(children)
+#                                     else:
+#                                         break
 
-                                    if self._nextTokenIs(TOKEN.LINEBREAK):
-                                        self._moveNextTokenTo(children)
+#                                 if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
+#                                     self._moveNextTokenTo(children)
 
-                                        statement = self._Statements()
-                                        if statement is not None:
-                                            children.append(statement)
+#                                     if self._nextTokenIs(TOKEN.LINEBREAK):
+#                                         self._moveNextTokenTo(children)
 
-                                        else:
-                                            self._throwError(
-                                                SyntaxError, "Missing statement"
-                                            )
+#                                         statement = self._Statements()
+#                                         if statement is not None:
+#                                             children.append(statement)
 
-                                    else:
-                                        self._throwError(
-                                            SyntaxError, "Missing linebreak"
-                                        )
+#                                         else:
+#                                             self._throwError(
+#                                                 SyntaxError, "Missing statement"
+#                                             )
 
-                                if self._nextTokenIs(
-                                    TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
-                                ):
-                                    self._moveNextTokenTo(children)
+#                                     else:
+#                                         self._throwError(
+#                                             SyntaxError, "Missing linebreak"
+#                                         )
 
-                                    return Node("case statement operation", children)
+#                                 if self._nextTokenIs(
+#                                     TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
+#                                 ):
+#                                     self._moveNextTokenTo(children)
 
-                                self._throwError(SyntaxError, 'Missing keyword "OIC"')
+#                                     return Node("case statement operation", children)
 
-                            self._throwError(SyntaxError, "Missing statement")
+#                                 self._throwError(SyntaxError, 'Missing keyword "OIC"')
 
-                        self._throwError(SyntaxError, "Missing linebreak")
+#                             self._throwError(SyntaxError, "Missing statement")
 
-                    self._throwError(SyntaxError, "Missing Operand")
+#                         self._throwError(SyntaxError, "Missing linebreak")
 
-                self._throwError(SyntaxError, 'Missing keyword "O RLY"')
+#                     self._throwError(SyntaxError, "Missing Operand")
 
-            self._throwError(SyntaxError, "Missing linebreak")
+#                 self._throwError(SyntaxError, 'Missing keyword "O RLY"')
 
-        return None
+#             self._throwError(SyntaxError, "Missing linebreak")
 
-    def _LoopStatement(self):
-        children = []
+#         return None
 
-        if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
-            self._moveNextTokenTo(children)
+#     def _LoopStatement(self):
+#         children = []
 
-            if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                self._moveNextTokenTo(children)
+#         if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
+#             self._moveNextTokenTo(children)
 
-                if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
-                    TOKEN.DECREMENT_KEYWORD
-                ):
-                    self._moveNextTokenTo(children)
+#             if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
+#                 self._moveNextTokenTo(children)
 
-                    if self._nextTokenIs(TOKEN.KEYWORD_IN_LOOP):
-                        self._moveNextTokenTo(children)
+#                 if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
+#                     TOKEN.DECREMENT_KEYWORD
+#                 ):
+#                     self._moveNextTokenTo(children)
 
-                        if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                            self._moveNextTokenTo(children)
+#                     if self._nextTokenIs(TOKEN.KEYWORD_IN_LOOP):
+#                         self._moveNextTokenTo(children)
 
-                            if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
-                                self._moveNextTokenTo(children)
+#                         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+#                             self._moveNextTokenTo(children)
 
-                                troofExpression = (
-                                    self._ComparisonOperation()
-                                    or self._TwoOperandOperation()
-                                    or self._MultipleOperandOperation()
-                                )
-                                if troofExpression is not None:
-                                    children.append(troofExpression)
+#                             if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
+#                                 self._moveNextTokenTo(children)
 
-                                else:
-                                    self._throwError(
-                                        SyntaxError, "Missing Troof Expression"
-                                    )
+#                                 troofExpression = (
+#                                     self._ComparisonOperation()
+#                                     or self._TwoOperandOperation()
+#                                     or self._MultipleOperandOperation()
+#                                 )
+#                                 if troofExpression is not None:
+#                                     children.append(troofExpression)
 
-                            if self._nextTokenIs(TOKEN.LINEBREAK):
-                                self._moveNextTokenTo(children)
+#                                 else:
+#                                     self._throwError(
+#                                         SyntaxError, "Missing Troof Expression"
+#                                     )
 
-                                statement = self._Statements()
-                                if statement is not None:
-                                    children.append(statement)
+#                             if self._nextTokenIs(TOKEN.LINEBREAK):
+#                                 self._moveNextTokenTo(children)
 
-                                if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
-                                    self._moveNextTokenTo(children)
+#                                 statement = self._Statements()
+#                                 if statement is not None:
+#                                     children.append(statement)
 
-                                    if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                                        self._moveNextTokenTo(children)
+#                                 if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+#                                     self._moveNextTokenTo(children)
 
-                                        return Node("loop statement", children)
+#                                     if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
+#                                         self._moveNextTokenTo(children)
 
-                                    self._throwError(
-                                        SyntaxError, "Missing Loop Identifier"
-                                    )
+#                                         return Node("loop statement", children)
 
-                                self._throwError(SyntaxError, "Missing Loop Delimeter")
+#                                     self._throwError(
+#                                         SyntaxError, "Missing Loop Identifier"
+#                                     )
 
-                            self._throwError(SyntaxError, "Missing linebreak")
+#                                 self._throwError(SyntaxError, "Missing Loop Delimeter")
 
-                        self._throwError(SyntaxError, "Missing Variable Identifier")
+#                             self._throwError(SyntaxError, "Missing linebreak")
 
-                    self._throwError(SyntaxError, 'Missing keyword "YR"')
+#                         self._throwError(SyntaxError, "Missing Variable Identifier")
 
-                self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
+#                     self._throwError(SyntaxError, 'Missing keyword "YR"')
 
-            self._throwError(SyntaxError, "Missing loop identifier")
+#                 self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
 
-        return None
+#             self._throwError(SyntaxError, "Missing loop identifier")
 
+#         return None
 
-# remove after reimplementation
-class Node:
-    def __init__(self, type, children: list):
-        self.type = type
-        self.children = children
+
+# # remove after reimplementation
+# class Node:
+#     def __init__(self, type, children: list):
+#         self.type = type
+#         self.children = children
