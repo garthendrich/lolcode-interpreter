@@ -14,13 +14,13 @@ class Parser:
 
     def _catchEndOfLine(self):
         if isEmpty(self.lexemes):
-            self._throwSyntaxError("Unexpected end of line")
+            self._throwError(SyntaxError, "Unexpected end of line")
 
     def _expectNext(self, tokenType, errorMessage):
         if self._nextTokenIs(tokenType):
             self._popNext()
         else:
-            self._throwSyntaxError(errorMessage)
+            self._throwError(SyntaxError, errorMessage)
 
     def _assign(self, identifier, value):
         self.memory[identifier] = value
@@ -28,6 +28,16 @@ class Parser:
     # remove after reimplementation
     def _moveNextTokenTo(self, list):
         list.append(self._popNext())
+
+    def _throwError(self, errorType, message):
+        errorArgs = (
+            None,
+            None,
+            0,
+            None,
+        )
+
+        raise errorType(message, errorArgs)
 
     def parse(self, lexemes):
         self.lexemes = lexemes
@@ -84,12 +94,12 @@ class Parser:
 
                     value = self._Operand()
                     if value is None:
-                        self._throwSyntaxError("Expected an expression")
+                        self._throwError(SyntaxError, "Expected an expression")
 
                 self._assign(variableIdentifier, value)
                 return True
 
-            self._throwSyntaxError("Expected a variable identifier")
+            self._throwError(SyntaxError, "Expected a variable identifier")
 
         return None
 
@@ -102,14 +112,14 @@ class Parser:
 
             operand = self._Operand()
             if operand is None:
-                self._throwSyntaxError("Expected an operand")
+                self._throwError(SyntaxError, "Expected an operand")
 
             children.append(operand)
 
             while not self._nextTokenIs(TOKEN.LINEBREAK):
                 operand = self._Operand()
                 if operand is None:
-                    self._throwSyntaxError("Expected an operand")
+                    self._throwError(SyntaxError, "Expected an operand")
 
                 children.append(operand)
 
@@ -211,11 +221,11 @@ class Parser:
                         # !!! temporary node type
                         return Node("operation", children)
 
-                    self._throwSyntaxError("Expected an operand")
+                    self._throwError(SyntaxError, "Expected an operand")
 
-                self._throwSyntaxError('Missing keyword "AN"')
+                self._throwError(SyntaxError, 'Missing keyword "AN"')
 
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
@@ -231,7 +241,7 @@ class Parser:
 
                 return Node("operation", children)
 
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
@@ -264,7 +274,7 @@ class Parser:
                                     children.append(operand)
 
                                 else:
-                                    self._throwSyntaxError("Expected an operand")
+                                    self._throwError(SyntaxError, "Expected an operand")
 
                             else:
                                 break
@@ -274,13 +284,13 @@ class Parser:
 
                             return Node("multiple operand operation", children)
 
-                        self._throwSyntaxError('Missing keyword "Mkay"')
+                        self._throwError(SyntaxError, 'Missing keyword "Mkay"')
 
-                    self._throwSyntaxError("Expected an operand")
+                    self._throwError(SyntaxError, "Expected an operand")
 
-                self._throwSyntaxError('Missing keyword "AN"')
+                self._throwError(SyntaxError, 'Missing keyword "AN"')
 
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
@@ -311,18 +321,18 @@ class Parser:
                                     children.append(operand)
 
                                 else:
-                                    self._throwSyntaxError("Expected an operand")
+                                    self._throwError(SyntaxError, "Expected an operand")
 
                             else:
                                 break
 
                         return Node("concatenation operation", children)
 
-                    self._throwSyntaxError("Expected an operand")
+                    self._throwError(SyntaxError, "Expected an operand")
 
-                self._throwSyntaxError('Missing keyword "AN"')
+                self._throwError(SyntaxError, 'Missing keyword "AN"')
 
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
@@ -365,11 +375,11 @@ class Parser:
 
                         return Node("comparison operation", children)
 
-                    self._throwSyntaxError("Expected an operand")
+                    self._throwError(SyntaxError, "Expected an operand")
 
-                self._throwSyntaxError('Missing keyword "AN"')
+                self._throwError(SyntaxError, 'Missing keyword "AN"')
 
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
@@ -387,9 +397,9 @@ class Parser:
 
                     return Node("explicit typecast operation", children)
 
-                self._throwSyntaxError("Expected a type literal")
+                self._throwError(SyntaxError, "Expected a type literal")
 
-            self._throwSyntaxError("Expected a variable identifier")
+            self._throwError(SyntaxError, "Expected a variable identifier")
 
         return None
 
@@ -415,7 +425,7 @@ class Parser:
                     return Node("recast typecast", children)
 
                 else:
-                    self._throwSyntaxError("Expected operand")
+                    self._throwError(SyntaxError, "Expected operand")
 
             elif self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
                 self._moveNextTokenTo(children)
@@ -425,9 +435,9 @@ class Parser:
 
                     return Node("recast typecast", children)
 
-                self._throwSyntaxError("Expected operand")
+                self._throwError(SyntaxError, "Expected operand")
 
-            self._throwSyntaxError("Expected assignment keyword")
+            self._throwError(SyntaxError, "Expected assignment keyword")
 
         return None
 
@@ -461,10 +471,10 @@ class Parser:
                                         children.append(statement)
 
                                     else:
-                                        self._throwSyntaxError("Missing statement")
+                                        self._throwError(SyntaxError, "Missing statement")
 
                                 else:
-                                    self._throwSyntaxError("Missing linebreak")
+                                    self._throwError(SyntaxError, "Missing linebreak")
 
                             if self._nextTokenIs(
                                 TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
@@ -473,15 +483,15 @@ class Parser:
 
                                 return Node("if statement operation", children)
 
-                            self._throwSyntaxError('Missing keyword "OIC"')
+                            self._throwError(SyntaxError, 'Missing keyword "OIC"')
 
-                        self._throwSyntaxError("Missing statement")
+                        self._throwError(SyntaxError, "Missing statement")
 
-                    self._throwSyntaxError("Missing linebreak")
+                    self._throwError(SyntaxError, "Missing linebreak")
 
-                self._throwSyntaxError('Missing keyword "O RLY"')
+                self._throwError(SyntaxError, 'Missing keyword "O RLY"')
 
-            self._throwSyntaxError("Missing linebreak")
+            self._throwError(SyntaxError, "Missing linebreak")
 
         return None
 
@@ -524,12 +534,12 @@ class Parser:
                                                     children.append(statement)
 
                                                 else:
-                                                    self._throwSyntaxError(
+                                                    self._throwError(SyntaxError, 
                                                         "Missing statement"
                                                     )
 
                                             else:
-                                                self._throwSyntaxError(
+                                                self._throwError(SyntaxError, 
                                                     "Missing linebreak"
                                                 )
 
@@ -547,10 +557,10 @@ class Parser:
                                             children.append(statement)
 
                                         else:
-                                            self._throwSyntaxError("Missing statement")
+                                            self._throwError(SyntaxError, "Missing statement")
 
                                     else:
-                                        self._throwSyntaxError("Missing linebreak")
+                                        self._throwError(SyntaxError, "Missing linebreak")
 
                                 if self._nextTokenIs(
                                     TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
@@ -559,17 +569,17 @@ class Parser:
 
                                     return Node("case statement operation", children)
 
-                                self._throwSyntaxError('Missing keyword "OIC"')
+                                self._throwError(SyntaxError, 'Missing keyword "OIC"')
 
-                            self._throwSyntaxError("Missing statement")
+                            self._throwError(SyntaxError, "Missing statement")
 
-                        self._throwSyntaxError("Missing linebreak")
+                        self._throwError(SyntaxError, "Missing linebreak")
 
-                    self._throwSyntaxError("Missing Operand")
+                    self._throwError(SyntaxError, "Missing Operand")
 
-                self._throwSyntaxError('Missing keyword "O RLY"')
+                self._throwError(SyntaxError, 'Missing keyword "O RLY"')
 
-            self._throwSyntaxError("Missing linebreak")
+            self._throwError(SyntaxError, "Missing linebreak")
 
         return None
 
@@ -605,7 +615,7 @@ class Parser:
                                     children.append(troofExpression)
 
                                 else:
-                                    self._throwSyntaxError("Missing Troof Expression")
+                                    self._throwError(SyntaxError, "Missing Troof Expression")
 
                             if self._nextTokenIs(TOKEN.LINEBREAK):
                                 self._moveNextTokenTo(children)
@@ -622,31 +632,21 @@ class Parser:
 
                                         return Node("loop statement", children)
 
-                                    self._throwSyntaxError("Missing Loop Identifier")
+                                    self._throwError(SyntaxError, "Missing Loop Identifier")
 
-                                self._throwSyntaxError("Missing Loop Delimeter")
+                                self._throwError(SyntaxError, "Missing Loop Delimeter")
 
-                            self._throwSyntaxError("Missing linebreak")
+                            self._throwError(SyntaxError, "Missing linebreak")
 
-                        self._throwSyntaxError("Missing Variable Identifier")
+                        self._throwError(SyntaxError, "Missing Variable Identifier")
 
-                    self._throwSyntaxError('Missing keyword "YR"')
+                    self._throwError(SyntaxError, 'Missing keyword "YR"')
 
-                self._throwSyntaxError("Missing UPPIN/NERFIN keyword")
+                self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
 
-            self._throwSyntaxError("Missing loop identifier")
+            self._throwError(SyntaxError, "Missing loop identifier")
 
         return None
-
-    def _throwSyntaxError(self, message):
-        syntaxErrorArgs = (
-            None,
-            None,
-            0,
-            None,
-        )
-
-        raise SyntaxError(message, syntaxErrorArgs)
 
 
 # remove after reimplementation
