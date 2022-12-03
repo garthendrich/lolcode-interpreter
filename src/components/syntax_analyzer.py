@@ -67,11 +67,7 @@ class Parser:
         statement = (
             self._Declaration()
             # or self._Output()
-            or self._TwoOperandOperation()
-            or self._MultipleOperandOperation()
-            # or self._ConcatOperation()
-            # or self._ComparisonOperation()
-            # or self._ExplicitTypecast()
+            or self._Operand()
             # or self._RecastingAndAssignment()
             # or self._IfStatement()
             # or self._CaseStatement()
