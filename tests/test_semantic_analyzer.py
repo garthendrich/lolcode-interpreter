@@ -15,11 +15,8 @@ class TestDeclarationAbstraction(unittest.TestCase):
         KTHXBYE"""
         )
 
-        try:
-            parser.parse(lexemes)
-            self.assertIsNone(parser.memory["var"])
-        except SyntaxError:
-            self.fail("Unexpected syntax error")
+        parser.parse(lexemes)
+        self.assertIsNone(parser.memory["var"])
 
     # def test_valid_declaration_with_value(self):
     #     lexemes = lexer.process(
@@ -28,8 +25,5 @@ class TestDeclarationAbstraction(unittest.TestCase):
     #     KTHXBYE"""
     #     )
 
-    #     try:
-    #         parser.parse(lexemes)
-    #         self.assertEqual(parser.memory["var"], 5)
-    #     except SyntaxError:
-    #         self.fail("Unexpected syntax error")
+    #     parser.parse(lexemes)
+    #     self.assertEqual(parser.memory["var"], 5)
