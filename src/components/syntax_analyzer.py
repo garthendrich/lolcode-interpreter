@@ -25,6 +25,12 @@ class Parser:
     def _assign(self, identifier, value):
         self.memory[identifier] = value
 
+    def _getValue(self, identifier):
+        if identifier in self.memory:
+            return self.memory.get(identifier)
+
+        self._throwError(NameError, f"{identifier} is not defined")
+
     # remove after reimplementation
     def _moveNextTokenTo(self, list):
         list.append(self._popNext())
@@ -142,15 +148,14 @@ class Parser:
 
     def _Operand(self):
         literalValue = self._Literal()
-        print(literalValue, type(literalValue))
         if literalValue is not None:
             return literalValue
 
-        # !!! ---
-
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            lexeme = self._popNext()
-            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+            identifierToken = self._popNext()
+            return self._getValue(identifierToken.lexeme)
+
+        # !!! ---
 
         operationOperand = (
             self._TwoOperandOperation()
@@ -471,7 +476,9 @@ class Parser:
                                         children.append(statement)
 
                                     else:
-                                        self._throwError(SyntaxError, "Missing statement")
+                                        self._throwError(
+                                            SyntaxError, "Missing statement"
+                                        )
 
                                 else:
                                     self._throwError(SyntaxError, "Missing linebreak")
@@ -534,13 +541,13 @@ class Parser:
                                                     children.append(statement)
 
                                                 else:
-                                                    self._throwError(SyntaxError, 
-                                                        "Missing statement"
+                                                    self._throwError(
+                                                        SyntaxError, "Missing statement"
                                                     )
 
                                             else:
-                                                self._throwError(SyntaxError, 
-                                                    "Missing linebreak"
+                                                self._throwError(
+                                                    SyntaxError, "Missing linebreak"
                                                 )
 
                                     else:
@@ -557,10 +564,14 @@ class Parser:
                                             children.append(statement)
 
                                         else:
-                                            self._throwError(SyntaxError, "Missing statement")
+                                            self._throwError(
+                                                SyntaxError, "Missing statement"
+                                            )
 
                                     else:
-                                        self._throwError(SyntaxError, "Missing linebreak")
+                                        self._throwError(
+                                            SyntaxError, "Missing linebreak"
+                                        )
 
                                 if self._nextTokenIs(
                                     TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
@@ -615,7 +626,9 @@ class Parser:
                                     children.append(troofExpression)
 
                                 else:
-                                    self._throwError(SyntaxError, "Missing Troof Expression")
+                                    self._throwError(
+                                        SyntaxError, "Missing Troof Expression"
+                                    )
 
                             if self._nextTokenIs(TOKEN.LINEBREAK):
                                 self._moveNextTokenTo(children)
@@ -632,7 +645,9 @@ class Parser:
 
                                         return Node("loop statement", children)
 
-                                    self._throwError(SyntaxError, "Missing Loop Identifier")
+                                    self._throwError(
+                                        SyntaxError, "Missing Loop Identifier"
+                                    )
 
                                 self._throwError(SyntaxError, "Missing Loop Delimeter")
 
