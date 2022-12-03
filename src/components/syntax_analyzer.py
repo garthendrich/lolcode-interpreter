@@ -162,9 +162,9 @@ class Parser:
         if operationValue is not None:
             return operationValue
 
-        # operationValue = self._MultipleOperandOperation()
-        # if operationValue is not None:
-        #     return operationValue
+        operationValue = self._MultipleOperandOperation()
+        if operationValue is not None:
+            return operationValue
 
         # operationValue = self._ComparisonOperation()
         # if operationValue is not None:
@@ -208,23 +208,23 @@ class Parser:
     def _operate(self, operationToken, a, b):
         if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
             return a + b
-        if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
+        elif operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
             return a - b
-        if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
+        elif operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
             return a * b
-        if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
+        elif operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
             return a / b
-        if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
+        elif operationToken.lexemeType == TOKEN.MODULO_OPERATION:
             return a % b
-        if operationToken.lexemeType == TOKEN.MAX_OPERATION:
+        elif operationToken.lexemeType == TOKEN.MAX_OPERATION:
             return max(a, b)
-        if operationToken.lexemeType == TOKEN.MIN_OPERATION:
+        elif operationToken.lexemeType == TOKEN.MIN_OPERATION:
             return min(a, b)
-        if operationToken.lexemeType == TOKEN.AND_OPERATION:
+        elif operationToken.lexemeType == TOKEN.AND_OPERATION:
             return a and b
-        if operationToken.lexemeType == TOKEN.OR_OPERATION:
+        elif operationToken.lexemeType == TOKEN.OR_OPERATION:
             return a or b
-        if operationToken.lexemeType == TOKEN.XOR_OPERATION:
+        elif operationToken.lexemeType == TOKEN.XOR_OPERATION:
             return (a and not b) or (not a and b)
 
     def _TwoOperandOperation(self):
@@ -271,49 +271,42 @@ class Parser:
         return None
 
     def _MultipleOperandOperation(self):
-        children = []
+        operandValues = []
 
         if self._nextTokenIs(TOKEN.INFINITE_ARITY_AND_OPERATION) or self._nextTokenIs(
             TOKEN.INFINITE_ARITY_OR_OPERATION
         ):
+            operationToken = self._popNext()
 
-            self._moveNextTokenTo(children)
+            firstOperandValue = self._Operand()
+            if firstOperandValue is not None:
+                operandValues.append(firstOperandValue)
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+                secondOperandValue = self._Operand()
+                if secondOperandValue is not None:
+                    operandValues.append(secondOperandValue)
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+                    while self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                        self._popNext()
 
-                        while True:
-                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                                self._moveNextTokenTo(children)
+                        operandValue = self._Operand()
+                        if operandValue is not None:
+                            operandValues.append(operandValue)
+                        else:
+                            self._throwError(SyntaxError, "Expected an operand")
 
-                                operand = self._Operand()
-                                if operand is not None:
-                                    children.append(operand)
+                    self._expectNext(
+                        TOKEN.INFINITE_ARITY_DELIMITER, 'Missing keyword "MKAY"'
+                    )
 
-                                else:
-                                    self._throwError(SyntaxError, "Expected an operand")
+                    if operationToken.lexemeType == TOKEN.INFINITE_ARITY_AND_OPERATION:
+                        return all(operandValues)
+                    elif operationToken.lexemeType == TOKEN.INFINITE_ARITY_OR_OPERATION:
+                        return any(operandValues)
 
-                            else:
-                                break
-
-                        if self._nextTokenIs(TOKEN.INFINITE_ARITY_DELIMITER):
-                            self._moveNextTokenTo(children)
-
-                            return Node("multiple operand operation", children)
-
-                        self._throwError(SyntaxError, 'Missing keyword "Mkay"')
-
-                    self._throwError(SyntaxError, "Expected an operand")
-
-                self._throwError(SyntaxError, 'Missing keyword "AN"')
+                self._throwError(SyntaxError, "Expected an operand")
 
             self._throwError(SyntaxError, "Expected an operand")
 
