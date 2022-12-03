@@ -18,12 +18,12 @@ class TestDeclarationAbstraction(unittest.TestCase):
         parser.parse(lexemes)
         self.assertIsNone(parser.memory["var"])
 
-    # def test_valid_declaration_with_value(self):
-    #     lexemes = lexer.process(
-    #         """HAI
-    #         I HAS A var ITZ 5
-    #     KTHXBYE"""
-    #     )
+    def test_valid_declaration_with_value(self):
+        lexemes = lexer.process(
+            """HAI
+            I HAS A var ITZ 5
+        KTHXBYE"""
+        )
 
-    #     parser.parse(lexemes)
-    #     self.assertEqual(parser.memory["var"], 5)
+        parser.parse(lexemes)
+        self.assertEqual(parser.memory["var"], 5)
