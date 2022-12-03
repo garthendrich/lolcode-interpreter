@@ -48,7 +48,7 @@ class Parser:
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "KTHXBYE"')
 
     def _Statements(self):
-        didGetAStatement = (
+        statement = (
             self._Declaration()
             or self._Output()
             or self._TwoOperandOperation()
@@ -63,7 +63,7 @@ class Parser:
             or self._Input()
         )
 
-        if didGetAStatement:
+        if statement is not None:
             self._expectNext(TOKEN.LINEBREAK, "Expected linebreak")
             while self._nextTokenIs(TOKEN.LINEBREAK):
                 self._popNext()
@@ -82,8 +82,6 @@ class Parser:
                 if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
                     self._popNext()
 
-                    # temporary return value
-                    # test declaration with value after fixing return value
                     value = self._Operand()
                     if value is None:
                         self._throwSyntaxError("Expected an expression")
@@ -93,7 +91,7 @@ class Parser:
 
             self._throwSyntaxError("Expected a variable identifier")
 
-        return False
+        return None
 
     # !! does not yet accept multiple operands
     def _Output(self):
@@ -133,9 +131,12 @@ class Parser:
         return None
 
     def _Operand(self):
-        literal = self._Literal()
-        if literal is not None:
-            return Node(ABSTRACTION.OPERAND, literal)
+        literalValue = self._Literal()
+        print(literalValue, type(literalValue))
+        if literalValue is not None:
+            return literalValue
+
+        # !!! ---
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
             lexeme = self._popNext()
@@ -155,16 +156,26 @@ class Parser:
         return None
 
     def _Literal(self):
-        if (
-            self._nextTokenIs(TOKEN.BOOL_LITERAL)
-            or self._nextTokenIs(TOKEN.FLOAT_LITERAL)
-            or self._nextTokenIs(TOKEN.INTEGER_LITERAL)
-            or self._nextTokenIs(TOKEN.STRING_LITERAL)
-            or self._nextTokenIs(TOKEN.TYPE_LITERAL)
-            or self._nextTokenIs(TOKEN.STRING_LITERAL)
-        ):
-            lexeme = self._popNext()
-            return Node(lexeme.lexemeType, lexeme.lexeme)
+        if self._nextTokenIs(TOKEN.BOOL_LITERAL):
+            boolToken = self._popNext()
+            return True if boolToken.lexeme == "WIN" else False
+
+        if self._nextTokenIs(TOKEN.FLOAT_LITERAL):
+            integerToken = self._popNext()
+            return float(integerToken.lexeme)
+
+        if self._nextTokenIs(TOKEN.INTEGER_LITERAL):
+            integerToken = self._popNext()
+            return int(integerToken.lexeme)
+
+        if self._nextTokenIs(TOKEN.STRING_LITERAL):
+            stringToken = self._popNext()
+
+            return stringToken.lexeme[1:-1]  # remove quotes
+
+        if self._nextTokenIs(TOKEN.TYPE_LITERAL):
+            typeToken = self._popNext()
+            return typeToken.lexeme  # ?????
 
         return None
 
