@@ -154,16 +154,29 @@ class Parser:
             identifierToken = self._popNext()
             return self._getValue(identifierToken.lexeme)
 
-        operationValue = (
-            self._TwoOperandOperation()
-            # or self._OneOperandOperation()
-            # or self._MultipleOperandOperation()
-            # or self._ComparisonOperation()
-            # or self._ConcatOperation()
-            # or self._ExplicitTypecast()
-        )
+        operationValue = self._TwoOperandOperation()
         if operationValue is not None:
             return operationValue
+
+        operationValue = self._NotOperation()
+        if operationValue is not None:
+            return operationValue
+
+        # operationValue = self._MultipleOperandOperation()
+        # if operationValue is not None:
+        #     return operationValue
+
+        # operationValue = self._ComparisonOperation()
+        # if operationValue is not None:
+        #     return operationValue
+
+        # operationValue = self._ConcatOperation()
+        # if operationValue is not None:
+        #     return operationValue
+
+        # operationValue = self._ExplicitTypecast()
+        # if operationValue is not None:
+        #     return operationValue
 
         return None
 
@@ -245,17 +258,13 @@ class Parser:
 
         return None
 
-    def _OneOperandOperation(self):
-        children = []
-
+    def _NotOperation(self):
         if self._nextTokenIs(TOKEN.NOT_OPERATION):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
-
-                return Node("operation", children)
+            value = self._Operand()
+            if value is not None:
+                return not value
 
             self._throwError(SyntaxError, "Expected an operand")
 
