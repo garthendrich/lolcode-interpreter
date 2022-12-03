@@ -109,7 +109,6 @@ class Parser:
 
         return None
 
-    # !! does not yet accept multiple operands
     def _Output(self):
         children = []
 
@@ -155,18 +154,16 @@ class Parser:
             identifierToken = self._popNext()
             return self._getValue(identifierToken.lexeme)
 
-        # !!! ---
-
-        operationOperand = (
+        operationValue = (
             self._TwoOperandOperation()
-            or self._OneOperandOperation()
-            or self._MultipleOperandOperation()
-            or self._ComparisonOperation()
-            or self._ConcatOperation()
-            or self._ExplicitTypecast()
+            # or self._OneOperandOperation()
+            # or self._MultipleOperandOperation()
+            # or self._ComparisonOperation()
+            # or self._ConcatOperation()
+            # or self._ExplicitTypecast()
         )
-        if operationOperand is not None:
-            return Node(ABSTRACTION.OPERAND, operationOperand)
+        if operationValue is not None:
+            return operationValue
 
         return None
 
@@ -190,14 +187,34 @@ class Parser:
 
         if self._nextTokenIs(TOKEN.TYPE_LITERAL):
             typeToken = self._popNext()
-            return typeToken.lexeme  # ?????
+            return typeToken.lexeme  # !!! ?????
 
         return None
 
-    # !!! does not yet accept nested operations
-    def _TwoOperandOperation(self):
-        children = []
+    # !!! no type checking
+    def _operate(self, operationToken, a, b):
+        if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
+            return a + b
+        if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
+            return a - b
+        if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
+            return a * b
+        if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
+            return a / b
+        if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
+            return a % b
+        if operationToken.lexemeType == TOKEN.MAX_OPERATION:
+            return max(a, b)
+        if operationToken.lexemeType == TOKEN.MIN_OPERATION:
+            return min(a, b)
+        if operationToken.lexemeType == TOKEN.AND_OPERATION:
+            return a and b
+        if operationToken.lexemeType == TOKEN.OR_OPERATION:
+            return a or b
+        if operationToken.lexemeType == TOKEN.XOR_OPERATION:
+            return (a and not b) or (not a and b)
 
+    def _TwoOperandOperation(self):
         if (
             self._nextTokenIs(TOKEN.ADDITION_OPERATION)
             or self._nextTokenIs(TOKEN.SUBTRACTION_OPERATION)
@@ -210,25 +227,19 @@ class Parser:
             or self._nextTokenIs(TOKEN.OR_OPERATION)
             or self._nextTokenIs(TOKEN.XOR_OPERATION)
         ):
-            self._moveNextTokenTo(children)
+            operationToken = self._popNext()
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+            firstOperandValue = self._Operand()
+            if firstOperandValue is not None:
+                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+                secondOperandValue = self._Operand()
+                if secondOperandValue is not None:
+                    return self._operate(
+                        operationToken, firstOperandValue, secondOperandValue
+                    )
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
-
-                        # !!! temporary node type
-                        return Node("operation", children)
-
-                    self._throwError(SyntaxError, "Expected an operand")
-
-                self._throwError(SyntaxError, 'Missing keyword "AN"')
+                self._throwError(SyntaxError, "Expected an operand")
 
             self._throwError(SyntaxError, "Expected an operand")
 
