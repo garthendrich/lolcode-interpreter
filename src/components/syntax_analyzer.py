@@ -166,10 +166,6 @@ class Parser:
         # if operationValue is not None:
         #     return operationValue
 
-        # operationValue = self._ConcatOperation()
-        # if operationValue is not None:
-        #     return operationValue
-
         # operationValue = self._ExplicitTypecast()
         # if operationValue is not None:
         #     return operationValue
@@ -269,8 +265,10 @@ class Parser:
     def _MultipleOperandOperation(self):
         operandValues = []
 
-        if self._nextTokenIs(TOKEN.INFINITE_ARITY_AND_OPERATION) or self._nextTokenIs(
-            TOKEN.INFINITE_ARITY_OR_OPERATION
+        if (
+            self._nextTokenIs(TOKEN.INFINITE_ARITY_AND_OPERATION)
+            or self._nextTokenIs(TOKEN.INFINITE_ARITY_OR_OPERATION)
+            or self._nextTokenIs(TOKEN.CONCATENATION_OPERATION)
         ):
             operationToken = self._popNext()
 
@@ -301,6 +299,8 @@ class Parser:
                         return all(operandValues)
                     elif operationToken.lexemeType == TOKEN.INFINITE_ARITY_OR_OPERATION:
                         return any(operandValues)
+                    elif operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
+                        return "".join(operandValues)
 
                 self._throwError(SyntaxError, "Expected an operand")
 
@@ -308,48 +308,6 @@ class Parser:
 
         return None
 
-
-#     def _ConcatOperation(self):
-#         children = []
-
-#         if self._nextTokenIs(TOKEN.CONCATENATION_OPERATION):
-
-#             self._moveNextTokenTo(children)
-
-#             operand = self._Operand()
-#             if operand is not None:
-#                 children.append(operand)
-
-#                 if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-#                     self._moveNextTokenTo(children)
-
-#                     operand = self._Operand()
-#                     if operand is not None:
-#                         children.append(operand)
-
-#                         while True:
-#                             if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-#                                 self._moveNextTokenTo(children)
-
-#                                 operand = self._Operand()
-#                                 if operand is not None:
-#                                     children.append(operand)
-
-#                                 else:
-#                                     self._throwError(SyntaxError, "Expected an operand")
-
-#                             else:
-#                                 break
-
-#                         return Node("concatenation operation", children)
-
-#                     self._throwError(SyntaxError, "Expected an operand")
-
-#                 self._throwError(SyntaxError, 'Missing keyword "AN"')
-
-#             self._throwError(SyntaxError, "Expected an operand")
-
-#         return None
 
 #     def _ComparisonOperation(self):
 #         children = []
