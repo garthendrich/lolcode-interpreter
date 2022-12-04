@@ -247,3 +247,37 @@ class TestLoopAbstraction(unittest.TestCase):
 
         with self.assertRaises(SyntaxError):
             parser.parse(lexemes)
+
+
+class TestMultipleOperandAbstraction(unittest.TestCase):
+    def test_valid_multiple_and(self):
+        lexemes = lexer.process(
+            """HAI
+            ALL OF WIN AN WIN AN WIN AN WIN AN FAIL MKAY
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+    def test_multiple_and_missing_separator(self):
+        lexemes = lexer.process(
+            """HAI
+            ALL OF WIN AN WIN WIN AN WIN AN FAIL MKAY
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_multiple_and_missing_closing(self):
+        lexemes = lexer.process(
+            """HAI
+            ALL OF WIN AN WIN AN WIN AN WIN AN FAIL 
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
