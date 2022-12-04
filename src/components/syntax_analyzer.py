@@ -586,74 +586,63 @@ class Parser:
 
 #         return None
 
-#     def _LoopStatement(self):
-#         children = []
+    def _LoopStatement(self):
+        if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
+            self._popNext()
 
-#         if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
-#             self._moveNextTokenTo(children)
+            self._expectNext(TOKEN.LOOP_IDENTIFIER, "Missing loop name")
 
-#             if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-#                 self._moveNextTokenTo(children)
+            if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
+                TOKEN.DECREMENT_KEYWORD
+            ):
+                deltaToken = self._popNext()
 
-#                 if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
-#                     TOKEN.DECREMENT_KEYWORD
-#                 ):
-#                     self._moveNextTokenTo(children)
+                self._expectNext(TOKEN.KEYWORD_IN_LOOP, 'Missing keyword "YR"')
 
-#                     if self._nextTokenIs(TOKEN.KEYWORD_IN_LOOP):
-#                         self._moveNextTokenTo(children)
+                if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+                    variableIdentifierToken = self._popNext()
+                    variableIdentifier = variableIdentifierToken.lexeme
 
-#                         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-#                             self._moveNextTokenTo(children)
+                    # if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
+                    #     self._moveNextTokenTo(children)
 
-#                             if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
-#                                 self._moveNextTokenTo(children)
+                    #     troofExpression = (
+                    #         self._ComparisonOperation()
+                    #         or self._TwoOperandOperation()
+                    #         or self._MultipleOperandOperation()
+                    #     )
+                    #     if troofExpression is not None:
+                    #         children.append(troofExpression)
 
-#                                 troofExpression = (
-#                                     self._ComparisonOperation()
-#                                     or self._TwoOperandOperation()
-#                                     or self._MultipleOperandOperation()
-#                                 )
-#                                 if troofExpression is not None:
-#                                     children.append(troofExpression)
+                    #     else:
+                    #         self._throwError(SyntaxError, "Missing Troof Expression")
 
-#                                 else:
-#                                     self._throwError(
-#                                         SyntaxError, "Missing Troof Expression"
-#                                     )
+                    # if self._nextTokenIs(TOKEN.LINEBREAK):
+                    #     self._moveNextTokenTo(children)
 
-#                             if self._nextTokenIs(TOKEN.LINEBREAK):
-#                                 self._moveNextTokenTo(children)
+                    #     statement = self._Statements()
+                    #     if statement is not None:
+                    #         children.append(statement)
 
-#                                 statement = self._Statements()
-#                                 if statement is not None:
-#                                     children.append(statement)
+                    #     if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+                    #         self._moveNextTokenTo(children)
 
-#                                 if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
-#                                     self._moveNextTokenTo(children)
+                    #         if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
+                    #             self._moveNextTokenTo(children)
 
-#                                     if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-#                                         self._moveNextTokenTo(children)
+                    #             return Node("loop statement", children)
 
-#                                         return Node("loop statement", children)
+                    #         self._throwError(SyntaxError, "Missing Loop Identifier")
 
-#                                     self._throwError(
-#                                         SyntaxError, "Missing Loop Identifier"
-#                                     )
+                    #     self._throwError(SyntaxError, "Missing Loop Delimeter")
 
-#                                 self._throwError(SyntaxError, "Missing Loop Delimeter")
+                    # self._throwError(SyntaxError, "Missing linebreak")
 
-#                             self._throwError(SyntaxError, "Missing linebreak")
+                self._throwError(SyntaxError, "Missing variable")
 
-#                         self._throwError(SyntaxError, "Missing Variable Identifier")
+            self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
 
-#                     self._throwError(SyntaxError, 'Missing keyword "YR"')
-
-#                 self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
-
-#             self._throwError(SyntaxError, "Missing loop identifier")
-
-#         return None
+        return None
 
 
 # # remove after reimplementation
