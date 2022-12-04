@@ -200,23 +200,23 @@ class Parser:
     def _operate(self, operationToken, a, b):
         if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
             return a + b
-        elif operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
+        if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
             return a - b
-        elif operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
+        if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
             return a * b
-        elif operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
+        if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
             return a / b
-        elif operationToken.lexemeType == TOKEN.MODULO_OPERATION:
+        if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
             return a % b
-        elif operationToken.lexemeType == TOKEN.MAX_OPERATION:
+        if operationToken.lexemeType == TOKEN.MAX_OPERATION:
             return max(a, b)
-        elif operationToken.lexemeType == TOKEN.MIN_OPERATION:
+        if operationToken.lexemeType == TOKEN.MIN_OPERATION:
             return min(a, b)
-        elif operationToken.lexemeType == TOKEN.AND_OPERATION:
+        if operationToken.lexemeType == TOKEN.AND_OPERATION:
             return a and b
-        elif operationToken.lexemeType == TOKEN.OR_OPERATION:
+        if operationToken.lexemeType == TOKEN.OR_OPERATION:
             return a or b
-        elif operationToken.lexemeType == TOKEN.XOR_OPERATION:
+        if operationToken.lexemeType == TOKEN.XOR_OPERATION:
             return (a and not b) or (not a and b)
 
     def _TwoOperandOperation(self):
@@ -297,9 +297,9 @@ class Parser:
 
                     if operationToken.lexemeType == TOKEN.INFINITE_ARITY_AND_OPERATION:
                         return all(operandValues)
-                    elif operationToken.lexemeType == TOKEN.INFINITE_ARITY_OR_OPERATION:
+                    if operationToken.lexemeType == TOKEN.INFINITE_ARITY_OR_OPERATION:
                         return any(operandValues)
-                    elif operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
+                    if operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
                         return "".join(operandValues)
 
                 self._throwError(SyntaxError, "Expected an operand")
