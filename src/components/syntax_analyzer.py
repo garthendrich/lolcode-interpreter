@@ -166,9 +166,9 @@ class Parser:
         # if operationValue is not None:
         #     return operationValue
 
-        # operationValue = self._ExplicitTypecast()
-        # if operationValue is not None:
-        #     return operationValue
+        operationValue = self._ExplicitTypecast()
+        if operationValue is not None:
+            return operationValue
 
         return None
 
@@ -356,25 +356,49 @@ class Parser:
 
 #         return None
 
-#     def _ExplicitTypecast(self):
-#         children = []
+    def _ExplicitTypecast(self):
+        if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
+            self._popNext()
 
-#         if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
-#             self._moveNextTokenTo(children)
+            if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+                variableIdentifierToken = self._popNext()
+                variableIdentifier = variableIdentifierToken.lexeme
+                value = self._getValue(variableIdentifier)
 
-#             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-#                 self._moveNextTokenTo(children)
+                if self._nextTokenIs(TOKEN.TYPE_LITERAL):
+                    typeToken = self._popNext()
 
-#                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-#                     self._moveNextTokenTo(children)
+                    if typeToken.lexeme == "TROOF":
+                        return bool(value)
 
-#                     return Node("explicit typecast operation", children)
+                    if typeToken.lexeme == "NUMBAR":
+                        if value == None:
+                            return 0.0
 
-#                 self._throwError(SyntaxError, "Expected a type literal")
+                        return float(value)
 
-#             self._throwError(SyntaxError, "Expected a variable identifier")
+                    if typeToken.lexeme == "NUMBR":
+                        if value == None:
+                            return 0
 
-#         return None
+                        return int(value)
+
+                    if typeToken.lexeme == "YARN":
+                        if value == None:
+                            return ""  # !!! ???
+
+                        # !!! ???
+                        if isinstance(value, bool):
+                            return "WIN" if value == True else "FAIL"
+
+                        return str(round(value, 2))
+
+                self._throwError(SyntaxError, "Expected a type")
+
+            self._throwError(SyntaxError, "Expected a variable")
+
+        return None
+
 
 #     def _RecastingAndAssignment(self):
 #         children = []
