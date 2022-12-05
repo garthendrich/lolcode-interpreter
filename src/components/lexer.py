@@ -123,6 +123,8 @@ class Lexer:
         self.lexemes.append(Token("\n", TOKEN.LINEBREAK))
 
     def _throwSyntaxError(self, message):
+        # column number is not accurate due to source code cleaning
+
         syntaxErrorArgs = (
             None,
             self.currentLineNumber,

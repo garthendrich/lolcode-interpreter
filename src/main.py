@@ -66,41 +66,51 @@ class Interpreter:
             lexemes = lexer.process(input_text)
             self.table_lexemes.insertObjectList(lexemes)
 
-            ast = parser.parse(lexemes)
+            ast = parser.parse(input_text, lexemes)
 
             # tempPrintAstRecursive(ast)
 
             self.console.outputResult(">\n" + parser.outputBuffer + "\n")
+
         except SyntaxError as error:
-            errorArrowIndenter = (error.offset or 0) * " "
-            status = f"\nline {error.lineno}:\n{error.text}\n{errorArrowIndenter}^\n{error.msg}"
+            # errorArrowIndenter = (error.offset or 0) * " "
+            # status = f"\nline {error.lineno}:\n{error.text}\n{errorArrowIndenter}^\n{error.msg}"
+
+            status = f"\nline {error.lineno}:\n{error.text}\n\n{error.msg}"
+            self.console.outputResult("> " + status + "\n")
+
+        except NameError as error:
+            msg, rest = error.args
+            fileName, lineno, offset, text = rest
+
+            status = f"\nline {lineno}:\n{text}\n\n{msg}"
             self.console.outputResult("> " + status + "\n")
 
 
-def tempPrintAstRecursive(ast):
-    if isinstance(ast, Node):
-        print(ast.type)
+# def tempPrintAstRecursive(ast):
+#     if isinstance(ast, Node):
+#         print(ast.type)
 
-        if hasattr(ast, "body"):
-            if isinstance(ast.children, str):
-                print(ast.children)
-                return
+#         if hasattr(ast, "body"):
+#             if isinstance(ast.children, str):
+#                 print(ast.children)
+#                 return
 
-            if isinstance(ast.children, Node):
-                tempPrintAstRecursive(ast.children)
-                return
+#             if isinstance(ast.children, Node):
+#                 tempPrintAstRecursive(ast.children)
+#                 return
 
-            # if ast.body is an array
-            for element in ast.children:
-                tempPrintAstRecursive(element)
+#             # if ast.body is an array
+#             for element in ast.children:
+#                 tempPrintAstRecursive(element)
 
-    if isinstance(ast, str):
-        print(ast)
-        return
+#     if isinstance(ast, str):
+#         print(ast)
+#         return
 
-    if isinstance(ast, Token):
-        print(ast.lexemeType)
-        return
+#     if isinstance(ast, Token):
+#         print(ast.lexemeType)
+#         return
 
 
 class TextEditor:

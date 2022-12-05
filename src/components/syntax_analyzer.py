@@ -4,13 +4,28 @@ from .utils import isEmpty
 
 
 class Parser:
+    def parse(self, sourceCode, lexemes):
+        self.currentLineNumber = 1
+        self.sourceCodeLines = sourceCode.split("\n")
+        self.lexemes = lexemes
+
+        self.memory = {}
+        self.outputBuffer = ""
+
+        return self._Program()
+
     def _nextTokenIs(self, tokenType):
         self._catchEndOfLine()
         return self.lexemes[0].lexemeType == tokenType
 
     def _popNext(self):
+        self._updateCurrentLineNumber()
         self._catchEndOfLine()
         return self.lexemes.pop(0)
+
+    def _updateCurrentLineNumber(self):
+        if self._nextTokenIs(TOKEN.LINEBREAK):
+            self.currentLineNumber += 1
 
     def _catchEndOfLine(self):
         if isEmpty(self.lexemes):
@@ -31,27 +46,15 @@ class Parser:
 
         self._throwError(NameError, f"{identifier} is not defined")
 
-    # # !!! remove after reimplementation
-    # def _moveNextTokenTo(self, list):
-    #     list.append(self._popNext())
-
     def _throwError(self, errorType, message):
         errorArgs = (
             None,
-            None,
-            0,
-            None,
+            self.currentLineNumber,
+            0, # not yet implemented
+            self.sourceCodeLines[self.currentLineNumber - 1],
         )
 
         raise errorType(message, errorArgs)
-
-    def parse(self, lexemes):
-        self.lexemes = lexemes
-
-        self.memory = {}
-        self.outputBuffer = ""
-
-        return self._Program()
 
     def _Program(self):
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
@@ -648,10 +651,3 @@ class Parser:
             self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
 
         return None
-
-
-# # remove after reimplementation
-# class Node:
-#     def __init__(self, type, children: list):
-#         self.type = type
-#         self.children = children
