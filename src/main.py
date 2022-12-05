@@ -12,7 +12,7 @@ from tkinter import (
 )
 
 from components.lexer import Lexer, Token
-from components.syntax_analyzer import Node, Parser
+from components.syntax_analyzer import Parser
 
 
 def main():
@@ -70,12 +70,11 @@ class Interpreter:
 
             # tempPrintAstRecursive(ast)
 
-            status = ""
+            self.console.outputResult(">\n" + parser.outputBuffer + "\n")
         except SyntaxError as error:
             errorArrowIndenter = (error.offset or 0) * " "
             status = f"\nline {error.lineno}:\n{error.text}\n{errorArrowIndenter}^\n{error.msg}"
-
-        self.console.outputResult("> " + status + "\n")
+            self.console.outputResult("> " + status + "\n")
 
 
 def tempPrintAstRecursive(ast):

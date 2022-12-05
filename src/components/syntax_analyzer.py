@@ -49,6 +49,7 @@ class Parser:
         self.lexemes = lexemes
 
         self.memory = {}
+        self.outputBuffer = ""
 
         return self._Program()
 
@@ -66,7 +67,7 @@ class Parser:
     def _Statements(self):
         statement = (
             self._Declaration()
-            # or self._Output()
+            or self._Output()
             or self._Operand()
             # or self._RecastingAndAssignment()
             # or self._IfStatement()
@@ -105,28 +106,32 @@ class Parser:
 
         return None
 
-    # def _Output(self):
-    #     children = []
+    def _Output(self):
+        if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
+            self._popNext()
 
-    #     if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
-    #         self._moveNextTokenTo(children)
+            value = self._Operand()
+            if value is None:
+                self._throwError(SyntaxError, "Expected an operand")
 
-    #         operand = self._Operand()
-    #         if operand is None:
-    #             self._throwError(SyntaxError, "Expected an operand")
+            self._output(value)
 
-    #         children.append(operand)
+            while not self._nextTokenIs(TOKEN.LINEBREAK):
+                value = self._Operand()
+                if value is None:
+                    self._throwError(SyntaxError, "Expected an operand")
 
-    #         while not self._nextTokenIs(TOKEN.LINEBREAK):
-    #             operand = self._Operand()
-    #             if operand is None:
-    #                 self._throwError(SyntaxError, "Expected an operand")
+                self._output(value)
 
-    #             children.append(operand)
+            return True
 
-    #         return Node(ABSTRACTION.OUTPUT, children)
+        return None
 
-    #     return None
+    def _output(self, value):
+        if isinstance(value, bool):
+            value = "WIN" if value == True else "FAIL"
+
+        self.outputBuffer += str(value) + "\n"
 
     # def _Input(self):
     #     children = []
