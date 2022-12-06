@@ -1,3 +1,4 @@
+from copy import deepcopy
 from .abstractions import ABSTRACTION
 from .token_enum import TOKEN
 from .utils import isEmpty
@@ -15,21 +16,22 @@ class Parser:
         return self._Program()
 
     def _nextTokenIs(self, tokenType):
-        self._catchEndOfLine()
+        if isEmpty(self.lexemes):
+            return
+
         return self.lexemes[0].lexemeType == tokenType
 
     def _popNext(self):
         self._updateCurrentLineNumber()
-        self._catchEndOfLine()
+
+        if isEmpty(self.lexemes):
+            return
+
         return self.lexemes.pop(0)
 
     def _updateCurrentLineNumber(self):
         if self._nextTokenIs(TOKEN.LINEBREAK):
             self.currentLineNumber += 1
-
-    def _catchEndOfLine(self):
-        if isEmpty(self.lexemes):
-            self._throwError(SyntaxError, "Unexpected end of line")
 
     def _expectNext(self, tokenType, errorMessage):
         if self._nextTokenIs(tokenType):
@@ -75,7 +77,7 @@ class Parser:
             # or self._RecastingAndAssignment()
             # or self._IfStatement()
             # or self._CaseStatement()
-            # or self._LoopStatement()
+            or self._LoopStatement()
             # or self._Input()
         )
 
@@ -174,9 +176,9 @@ class Parser:
         # if operationValue is not None:
         #     return operationValue
 
-        operationValue = self._ExplicitTypecast()
-        if operationValue is not None:
-            return operationValue
+        explicitTypecast = self._ExplicitTypecast()
+        if explicitTypecast is not None:
+            return explicitTypecast
 
         return None
 
@@ -594,60 +596,87 @@ class Parser:
 
 #         return None
 
+    # !!! no nested loops
+    # !!! does not verify loop identifier
     def _LoopStatement(self):
         if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
             self._popNext()
 
-            self._expectNext(TOKEN.LOOP_IDENTIFIER, "Missing loop name")
+            if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
+                loopIdentifierToken = self._popNext()
+                loopIdentifier = loopIdentifierToken.lexeme
 
-            if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
-                TOKEN.DECREMENT_KEYWORD
-            ):
-                deltaToken = self._popNext()
+                if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
+                    TOKEN.DECREMENT_KEYWORD
+                ):
+                    deltaToken = self._popNext()
+                    if deltaToken.lexeme == "UPPIN":
+                        delta = 1
+                    elif deltaToken.lexeme == "NERFIN":
+                        delta = -1
 
-                self._expectNext(TOKEN.KEYWORD_IN_LOOP, 'Missing keyword "YR"')
+                    self._expectNext(TOKEN.KEYWORD_IN_LOOP, 'Missing keyword "YR"')
 
-                if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                    variableIdentifierToken = self._popNext()
-                    variableIdentifier = variableIdentifierToken.lexeme
+                    if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+                        variableIdentifierToken = self._popNext()
+                        variableIdentifier = variableIdentifierToken.lexeme
 
-                    # if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
-                    #     self._moveNextTokenTo(children)
+                        conditionExpressionLexemes = []
+                        hasLoopCondition = False
+                        if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
+                            loopConditionKeywordToken = self._popNext()
 
-                    #     troofExpression = (
-                    #         self._ComparisonOperation()
-                    #         or self._TwoOperandOperation()
-                    #         or self._MultipleOperandOperation()
-                    #     )
-                    #     if troofExpression is not None:
-                    #         children.append(troofExpression)
+                            hasLoopCondition = True
 
-                    #     else:
-                    #         self._throwError(SyntaxError, "Missing Troof Expression")
+                            while not self._nextTokenIs(TOKEN.LINEBREAK):
+                                conditionExpressionLexemes.append(self._popNext())
 
-                    # if self._nextTokenIs(TOKEN.LINEBREAK):
-                    #     self._moveNextTokenTo(children)
+                        self._expectNext(
+                            TOKEN.LINEBREAK, "Missing condition or new line"
+                        )
 
-                    #     statement = self._Statements()
-                    #     if statement is not None:
-                    #         children.append(statement)
+                        while self._nextTokenIs(TOKEN.LINEBREAK):
+                            self._popNext()
 
-                    #     if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
-                    #         self._moveNextTokenTo(children)
+                        loopBlockLexemes = []
+                        while not self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+                            loopBlockLexemes.append(self._popNext())
 
-                    #         if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                    #             self._moveNextTokenTo(children)
+                        self._expectNext(TOKEN.LOOP_DELIMITER, "Missing loop closing")
 
-                    #             return Node("loop statement", children)
+                        self._expectNext(
+                            TOKEN.LOOP_IDENTIFIER, "Missing loop identifier"
+                        )
 
-                    #         self._throwError(SyntaxError, "Missing Loop Identifier")
+                        remainderLexemes = self.lexemes
 
-                    #     self._throwError(SyntaxError, "Missing Loop Delimeter")
+                        while True:
+                            self.lexemes = conditionExpressionLexemes + loopBlockLexemes
 
-                    # self._throwError(SyntaxError, "Missing linebreak")
+                            if hasLoopCondition:
+                                if loopConditionKeywordToken.lexeme == "WILE":
+                                    loopRunCondition = self._Operand()
+                                elif loopConditionKeywordToken.lexeme == "TIL":
+                                    loopRunCondition = not self._Operand()
 
-                self._throwError(SyntaxError, "Missing variable")
+                                if not loopRunCondition:
+                                    break
 
-            self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
+                            self._Statements()
+
+                            self._assign(
+                                variableIdentifier,
+                                self._getValue(variableIdentifier) + delta,
+                            )
+
+                        self.lexemes = remainderLexemes
+
+                        return True
+
+                    self._throwError(SyntaxError, "Missing variable")
+
+                self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
+
+            self._throwError(SyntaxError, "Missing loop name")
 
         return None
