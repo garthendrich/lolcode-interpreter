@@ -52,7 +52,7 @@ class Parser:
         errorArgs = (
             None,
             self.currentLineNumber,
-            0, # not yet implemented
+            0,  # not yet implemented
             self.sourceCodeLines[self.currentLineNumber - 1],
         )
 
@@ -602,6 +602,8 @@ class Parser:
         if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
             self._popNext()
 
+            loopHeaderLineNumber = self.currentLineNumber
+
             if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
                 loopIdentifierToken = self._popNext()
                 loopIdentifier = loopIdentifierToken.lexeme
@@ -652,6 +654,7 @@ class Parser:
 
                         while True:
                             self.lexemes = conditionExpressionLexemes + loopBlockLexemes
+                            self.currentLineNumber = loopHeaderLineNumber + 1
 
                             if hasLoopCondition:
                                 if loopConditionKeywordToken.lexeme == "WILE":

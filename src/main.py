@@ -76,14 +76,14 @@ class Interpreter:
             # errorArrowIndenter = (error.offset or 0) * " "
             # status = f"\nline {error.lineno}:\n{error.text}\n{errorArrowIndenter}^\n{error.msg}"
 
-            status = f"\nline {error.lineno}:\n{error.text}\n\n{error.msg}"
+            status = f"\nline {error.lineno}:\n{error.text.strip()}\n\n{error.msg}"
             self.console.outputResult("> " + status + "\n")
 
         except NameError as error:
             msg, rest = error.args
             fileName, lineno, offset, text = rest
 
-            status = f"\nline {lineno}:\n{text}\n\n{msg}"
+            status = f"\nline {lineno}:\n{text.strip()}\n\n{msg}"
             self.console.outputResult("> " + status + "\n")
 
 
