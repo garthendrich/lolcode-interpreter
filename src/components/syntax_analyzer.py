@@ -1,7 +1,7 @@
 from copy import deepcopy
 from .abstractions import ABSTRACTION
 from .token_enum import TOKEN
-from .utils import isEmpty
+from .utils import isEmpty, toNumber
 
 
 class Parser:
@@ -208,28 +208,27 @@ class Parser:
 
         return None
 
-    # !!! no type checking
     def _operate(self, operationToken, a, b):
         if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
-            return a + b
+            return toNumber(a) + toNumber(b)
         if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
-            return a - b
+            return toNumber(a) - toNumber(b)
         if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
-            return a * b
+            return toNumber(a) * toNumber(b)
         if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
-            return a / b
+            return toNumber(a) / toNumber(b)
         if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
-            return a % b
+            return toNumber(a) % toNumber(b)
         if operationToken.lexemeType == TOKEN.MAX_OPERATION:
-            return max(a, b)
+            return max(toNumber(a), toNumber(b))
         if operationToken.lexemeType == TOKEN.MIN_OPERATION:
-            return min(a, b)
+            return min(toNumber(a), toNumber(b))
         if operationToken.lexemeType == TOKEN.AND_OPERATION:
-            return a and b
+            return bool(a) and bool(b)
         if operationToken.lexemeType == TOKEN.OR_OPERATION:
-            return a or b
+            return bool(a) or bool(b)
         if operationToken.lexemeType == TOKEN.XOR_OPERATION:
-            return (a and not b) or (not a and b)
+            return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
 
     def _TwoOperandOperation(self):
         if (
