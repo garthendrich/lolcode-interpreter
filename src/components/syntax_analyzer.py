@@ -67,7 +67,7 @@ class Parser:
 
         self._Statements()
 
-        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "KTHXBYE"')
+        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing ending keyword "KTHXBYE"')
 
     def _Statements(self):
         statement = (
@@ -128,6 +128,8 @@ class Parser:
 
                 self._output(value)
 
+            self._output("\n")
+
             return True
 
         return None
@@ -136,7 +138,7 @@ class Parser:
         if isinstance(value, bool):
             value = "WIN" if value == True else "FAIL"
 
-        self.outputBuffer += str(value) + "\n"
+        self.outputBuffer += str(value)
 
     # def _Input(self):
     #     children = []
