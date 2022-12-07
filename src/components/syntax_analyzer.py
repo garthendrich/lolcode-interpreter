@@ -283,6 +283,11 @@ class Parser:
         ):
             operationToken = self._popNext()
 
+            if operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
+                needsMkay = False
+            else:
+                needsMkay = True
+
             firstOperandValue = self._Operand()
             if firstOperandValue is not None:
                 operandValues.append(firstOperandValue)
@@ -302,9 +307,10 @@ class Parser:
                         else:
                             self._throwError(SyntaxError, "Expected an operand")
 
-                    self._expectNext(
-                        TOKEN.INFINITE_ARITY_DELIMITER, 'Missing keyword "MKAY"'
-                    )
+                    if needsMkay:
+                        self._expectNext(
+                            TOKEN.INFINITE_ARITY_DELIMITER, 'Missing keyword "MKAY"'
+                        )
 
                     if operationToken.lexemeType == TOKEN.INFINITE_ARITY_AND_OPERATION:
                         return all(operandValues)
