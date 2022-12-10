@@ -5,6 +5,7 @@ class TOKEN:
     MULTILINE_COMMENT_DELIMITER = "multiline comment delimiter"
     VARIABLE_DECLARATION = "variable declaration"
     VARIABLE_ASSIGNMENT = "variable assignment"
+    IT_VARIABLE = "IT"
     ADDITION_OPERATION = "addition operation"
     SUBTRACTION_OPERATION = "subtraction operation"
     MULTIPLICATION_OPERATION = "multiplication operation"
@@ -20,6 +21,12 @@ class TOKEN:
     INFINITE_ARITY_OR_OPERATION = ("infinite arity or operation",)
     EQUAL_TO_OPERATION = "equal to operation"
     NOT_EQUAL_TO_OPERATION = "not equal to operation"
+
+    GREATER_THAN_OR_EQUAL_TO_OPERATION = EQUAL_TO_OPERATION + MAX_OPERATION
+    GREATER_THAN = NOT_EQUAL_TO_OPERATION + MAX_OPERATION
+    LESS_THAN_OR_EQUAL_TO_OPERATION = EQUAL_TO_OPERATION + MIN_OPERATION
+    LESS_THAN = NOT_EQUAL_TO_OPERATION + MIN_OPERATION
+
     CONCATENATION_OPERATION = "concantenation operaion"
     EXPLICIT_TYPECASTING_KEYWORD = "explicit typecasting keyword"
     OPTIONAL_A_KEYWORD = "optional A keyword"

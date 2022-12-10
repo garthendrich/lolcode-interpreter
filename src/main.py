@@ -113,7 +113,6 @@ class Interpreter:
 #         print(ast.lexemeType)
 #         return
 
-
 class TextEditor:
     def __init__(self, frame):
         self.textField = Text(frame)
