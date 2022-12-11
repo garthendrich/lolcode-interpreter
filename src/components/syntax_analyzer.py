@@ -73,10 +73,11 @@ class Parser:
         statement = (
             self._Declaration()
             or self._Output()
-            or self._RecastingAndAssignment()
+            or self._RecastingStatement()
+            or self._AssignmentStatement()
             or self._LoopStatement()
             or self._Input()
-            # or self._IfStatement()
+            or self._IfStatement()
             # or self._CaseStatement()
         )
 
@@ -245,17 +246,17 @@ class Parser:
         if operationToken.lexemeType == TOKEN.XOR_OPERATION:
             return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
         if operationToken.lexemeType == TOKEN.EQUAL_TO_OPERATION:
-            return (a == b)
+            return (toNumber(a) == toNumber(b))
         if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
-            return (a != b)
+            return (toNumber(a) != toNumber(b))
         if operationToken.lexemeType == TOKEN.GREATER_THAN_OR_EQUAL_TO_OPERATION:
-            return (a >= b)
+            return (toNumber(a) >= toNumber(b))
         if operationToken.lexemeType == TOKEN.LESS_THAN_OR_EQUAL_TO_OPERATION:
-            return (a <= b)
+            return (toNumber(a) <= toNumber(b))
         if operationToken.lexemeType == TOKEN.GREATER_THAN:
-            return (a > b)
+            return (toNumber(a) > toNumber(b))
         if operationToken.lexemeType == TOKEN.LESS_THAN:
-            return (a < b)
+            return (toNumber(a) < toNumber(b))
 
     def _TwoOperandOperation(self):
         if (
@@ -448,7 +449,7 @@ class Parser:
         return None
 
 
-    def _RecastingAndAssignment(self):
+    def _AssignmentStatement(self):
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
             variableIdentifierToken = self._popNext()
@@ -466,8 +467,22 @@ class Parser:
                 self._assign(variableIdentifier, value)
 
                 return True
+            
+            self.lexemes.append(variableIdentifierToken)
 
-            elif self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
+            return None
+
+        return None
+
+    
+    def _RecastingStatement(self):
+
+        if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+            variableIdentifierToken = self._popNext()
+            variableIdentifier = variableIdentifierToken.lexeme
+            value = None
+
+            if self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
                 print("recasting var")
                 self._popNext()
 
@@ -500,19 +515,19 @@ class Parser:
                     return True
 
                 self._throwError(SyntaxError, "Expected operand")
-            
-            value = self._getValue(variableIdentifier)
-            self._assign(TOKEN.IT_VARIABLE, value)
 
-            return True
+            self.lexemes.append(variableIdentifierToken)
+
+            return None
 
         return None
-
 
     def _IfStatement(self):
 
         if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
             self._popNext()
+
+            elseExist = False
 
             self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
@@ -530,6 +545,8 @@ class Parser:
             if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
                 self._popNext()
 
+                elseExist = True
+
                 self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
                 while self._nextTokenIs(TOKEN.LINEBREAK):
@@ -541,9 +558,19 @@ class Parser:
 
             self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
 
+            if self._getValue(TOKEN.IT_VARIABLE):
+                self.lexemes += ifBlockLexemes
+                self.currentLineNumber -= len(ifBlockLexemes)
+
+            elif(elseExist):
+                self.lexemes += elseBlockLexemes
+                self.currentLineNumber -= len(elseBlockLexemes)
+
             return True
 
         return None
+
+    
 
 #     def _CaseStatement(self):
 #         children = []
