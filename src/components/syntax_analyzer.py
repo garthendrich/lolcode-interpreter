@@ -467,8 +467,8 @@ class Parser:
                 self._assign(variableIdentifier, value)
 
                 return True
-            
-            self.lexemes.append(variableIdentifierToken)
+
+            self.lexemes.insert(0,variableIdentifierToken)
 
             return None
 
@@ -516,7 +516,7 @@ class Parser:
 
                 self._throwError(SyntaxError, "Expected operand")
 
-            self.lexemes.append(variableIdentifierToken)
+            self.lexemes.insert(0, variableIdentifierToken)
 
             return None
 
