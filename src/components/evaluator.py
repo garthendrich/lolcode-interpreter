@@ -175,6 +175,9 @@ class Evaluator:
                 value = easygui.enterbox(self.outputBuffer)
                 self._assign(variableIdentifier, value)
 
+                self._output(value)
+                self._output("\n")
+
                 return True
 
         return None
