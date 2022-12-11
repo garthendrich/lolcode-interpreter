@@ -73,7 +73,7 @@ class Lexer:
 
     def _removeComments(self, content):
         noSingleLineComments = re.sub(r"BTW .*", "", content)
-        return re.sub(r"(OBTW(?<=OBTW)(.|\n)*(?=TLDR)TLDR)", "", noSingleLineComments)
+        return re.sub(r"(OBTW(?<=OBTW)(.|\n)*?(?=TLDR)TLDR)", "", noSingleLineComments)
 
     def _tokenizeSourceCode(self, sourceCode):
         for lineIndex, line in enumerate(sourceCode.split("\n")):
