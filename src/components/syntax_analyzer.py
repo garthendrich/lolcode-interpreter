@@ -419,6 +419,26 @@ class Parser:
 
         return None
 
+    def _typeCast(self, type, value):
+        if type == "TROOF":
+            return bool(value)
+
+        if type == "NUMBAR":
+            return float(value) if value != None else 0.0
+
+        if type == "NUMBR":
+            return int(value) if value != None else 0
+
+        if type == "YARN":
+            if value == None:
+                return ""
+
+            if isinstance(value, bool):
+                return "WIN" if value else "FAIL"
+
+            if isinstance(value, int) or isinstance(value, float):
+                return str(round(value, 2))
+
     def _ExplicitTypecast(self):
         if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
             self._popNext()
@@ -431,30 +451,7 @@ class Parser:
                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
                     typeToken = self._popNext()
 
-                    if typeToken.lexeme == "TROOF":
-                        return bool(value)
-
-                    if typeToken.lexeme == "NUMBAR":
-                        if value == None:
-                            return 0.0
-
-                        return float(value)
-
-                    if typeToken.lexeme == "NUMBR":
-                        if value == None:
-                            return 0
-
-                        return int(value)
-
-                    if typeToken.lexeme == "YARN":
-                        if value == None:
-                            return ""  # !!! ???
-
-                        # !!! ???
-                        if isinstance(value, bool):
-                            return "WIN" if value == True else "FAIL"
-
-                        return str(round(value, 2))
+                    return self._typeCast(typeToken.lexeme, value)
 
                 self._throwError(SyntaxError, "Expected a type")
 
@@ -503,26 +500,9 @@ class Parser:
                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
                     typeToken = self._popNext()
 
-                    if typeToken.lexeme == "TROOF":
-                        value = bool(value)
+                    typedValue = self._typeCast(typeToken.lexeme, value)
 
-                    if typeToken.lexeme == "NUMBAR":
-                        value = float(value) if value != None else 0.0
-
-                    if typeToken.lexeme == "NUMBR":
-                        value = int(value) if value != None else 0
-
-                    if typeToken.lexeme == "YARN":
-                        if value == None:
-                            value = ""
-
-                        if isinstance(value, bool):
-                            value = "WIN" if value else "FAIL"
-
-                        if isinstance(value, int) or isinstance(value, float):
-                            value = str(round(value, 2))
-
-                    self._assign(variableIdentifier, value)
+                    self._assign(variableIdentifier, typedValue)
 
                     return True
 
