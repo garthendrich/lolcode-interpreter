@@ -10,7 +10,7 @@
 pipx install poetry
 ```
 
-or follow this [link](https://python-poetry.org/docs/)
+or follow this [link](https://python-poetry.org/docs/#installation)
 
 2. Install dependencies with poetry
 
