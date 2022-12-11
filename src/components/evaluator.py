@@ -234,30 +234,33 @@ class Evaluator:
         return None
 
     def _operate(self, operationToken, a, b):
-        if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
-            return toNumber(a) + toNumber(b)
-        if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
-            return toNumber(a) - toNumber(b)
-        if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
-            return toNumber(a) * toNumber(b)
-        if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
-            return toNumber(a) / toNumber(b)
-        if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
-            return toNumber(a) % toNumber(b)
-        if operationToken.lexemeType == TOKEN.MAX_OPERATION:
-            return max(toNumber(a), toNumber(b))
-        if operationToken.lexemeType == TOKEN.MIN_OPERATION:
-            return min(toNumber(a), toNumber(b))
-        if operationToken.lexemeType == TOKEN.AND_OPERATION:
-            return bool(a) and bool(b)
-        if operationToken.lexemeType == TOKEN.OR_OPERATION:
-            return bool(a) or bool(b)
-        if operationToken.lexemeType == TOKEN.XOR_OPERATION:
-            return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
-        if operationToken.lexemeType == TOKEN.EQUAL_TO_OPERATION:
-            return toNumber(a) == toNumber(b)
-        if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
-            return toNumber(a) != toNumber(b)
+        try:
+            if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
+                return toNumber(a) + toNumber(b)
+            if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
+                return toNumber(a) - toNumber(b)
+            if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
+                return toNumber(a) * toNumber(b)
+            if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
+                return toNumber(a) / toNumber(b)
+            if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
+                return toNumber(a) % toNumber(b)
+            if operationToken.lexemeType == TOKEN.MAX_OPERATION:
+                return max(toNumber(a), toNumber(b))
+            if operationToken.lexemeType == TOKEN.MIN_OPERATION:
+                return min(toNumber(a), toNumber(b))
+            if operationToken.lexemeType == TOKEN.AND_OPERATION:
+                return bool(a) and bool(b)
+            if operationToken.lexemeType == TOKEN.OR_OPERATION:
+                return bool(a) or bool(b)
+            if operationToken.lexemeType == TOKEN.XOR_OPERATION:
+                return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
+            if operationToken.lexemeType == TOKEN.EQUAL_TO_OPERATION:
+                return toNumber(a) == toNumber(b)
+            if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
+                return toNumber(a) != toNumber(b)
+        except ValueError as error:
+            self._throwError(ValueError, error.args[0])
 
     def _TwoOperandOperation(self):
         if (
@@ -363,11 +366,15 @@ class Evaluator:
         if type == "TROOF":
             return bool(value)
 
-        if type == "NUMBAR":
-            return float(value) if value != None else 0.0
+        try:
+            if type == "NUMBAR":
+                return float(value) if value != None else 0.0
 
-        if type == "NUMBR":
-            return int(value) if value != None else 0
+            if type == "NUMBR":
+                return int(value) if value != None else 0
+
+        except ValueError as error:
+            self._throwError(ValueError, error.args[0])
 
         if type == "YARN":
             if value == None:

@@ -76,7 +76,7 @@ class Interpreter:
 
             status = f"\nline {error.lineno}:\n{error.text.strip()}\n\n{error.msg}"
 
-        except NameError as error:
+        except (NameError, ValueError) as error:
             msg, rest = error.args
             fileName, lineno, offset, text = rest
 
