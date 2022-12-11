@@ -2,8 +2,8 @@ from copy import deepcopy
 from .abstractions import ABSTRACTION
 from .token_enum import TOKEN
 from .utils import isEmpty, toNumber
-
 import easygui
+
 class Parser:
     def parse(self, sourceCode, lexemes):
         self.currentLineNumber = 1
@@ -12,6 +12,8 @@ class Parser:
 
         self.memory = {}
         self.outputBuffer = ""
+
+        self.canGTFO = False
 
         return self._Program()
 
@@ -78,16 +80,13 @@ class Parser:
             or self._LoopStatement()
             or self._Input()
             or self._IfStatement()
-            # or self._CaseStatement()
+            or self._CaseStatement()
+            or self._BreakStatement()
         )
 
         if statement is None: 
-            statement = (
-                self._Operand()
-            )
-
+            statement = self._Operand()
             self._assign(TOKEN.IT_VARIABLE, statement)
-
 
         if statement is not None:
 
@@ -364,10 +363,9 @@ class Parser:
 
             firstOperandValue = self._Operand()
             if firstOperandValue is not None:
+
                 self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
                 
-                print("operand 1 found")
-
                 if (
                     self._nextTokenIs(TOKEN.MAX_OPERATION) 
                     or self._nextTokenIs(TOKEN.MIN_OPERATION)
@@ -390,7 +388,6 @@ class Parser:
 
                             return None
 
-                        print("operand 2 found")
                         operationToken = operationToken + operationTypeToken
                         return self._operate(operationToken, firstOperandValue, secondOperandValue)
 
@@ -523,11 +520,10 @@ class Parser:
         return None
 
     def _IfStatement(self):
+        statementBlockDict = {}
 
         if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
             self._popNext()
-
-            elseExist = False
 
             self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
@@ -542,10 +538,10 @@ class Parser:
             while (not (self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD) or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER))):
                 ifBlockLexemes.append(self._popNext())
 
+            statementBlockDict[self._getValue(TOKEN.IT_VARIABLE)] = ifBlockLexemes
+
             if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
                 self._popNext()
-
-                elseExist = True
 
                 self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
@@ -556,113 +552,130 @@ class Parser:
                 while (not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)):
                     elseBlockLexemes.append(self._popNext())
 
+                if True not in statementBlockDict.keys():
+                    statementBlockDict[True] = elseBlockLexemes
+
             self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
 
-            if self._getValue(TOKEN.IT_VARIABLE):
-                self.lexemes += ifBlockLexemes
-                self.currentLineNumber -= len(ifBlockLexemes)
+            if True in statementBlockDict.keys():
+                remainingLexemes = self.lexemes
 
-            elif(elseExist):
-                self.lexemes += elseBlockLexemes
-                self.currentLineNumber -= len(elseBlockLexemes)
+                self.lexemes = statementBlockDict[True]
+                self.currentLineNumber = 0
+
+                self._Statements()
+
+                self.lexemes = remainingLexemes
 
             return True
 
         return None
 
     
+    def _BreakStatement(self):
 
-#     def _CaseStatement(self):
-#         children = []
+        if self.canGTFO:
 
-#         if self._nextTokenIs(TOKEN.SWITCH_CASE_STATEMENT_DELIMITER):
-#             self._moveNextTokenTo(children)
+            if self._nextTokenIs(TOKEN.BREAK_STATEMENT):
 
-#             if self._nextTokenIs(TOKEN.LINEBREAK):
-#                 self._moveNextTokenTo(children)
+                self.lexemes = []
+                return None
 
-#                 if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-#                     self._moveNextTokenTo(children)
+        return None 
 
-#                     operand = self._Operand()
-#                     if operand is not None:
-#                         children.append(operand)
 
-#                         if self._nextTokenIs(TOKEN.LINEBREAK):
-#                             self._moveNextTokenTo(children)
+    def _CaseStatement(self):
 
-#                             statement = self._Statements()
-#                             if statement is not None:
-#                                 children.append(statement)
+        if self._nextTokenIs(TOKEN.SWITCH_CASE_STATEMENT_DELIMITER):
+            self._popNext()
 
-#                                 while True:
-#                                     if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-#                                         self._moveNextTokenTo(children)
+            statementBlockLocation = {}
+            caseCodeBlock = []
+            it_var = self._getValue(TOKEN.IT_VARIABLE)
 
-#                                         operand = self._Operand()
-#                                         if operand is not None:
-#                                             children.append(operand)
+            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
-#                                             if self._nextTokenIs(TOKEN.LINEBREAK):
-#                                                 self._moveNextTokenTo(children)
+            self._expectNext(TOKEN.CASE_KEYWORD, "Expected keyword 'OMG'")
 
-#                                                 statement = self._Statements()
-#                                                 if statement is not None:
-#                                                     children.append(statement)
+            operand = self._Operand()
+            if operand is not None:
+                
+                self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
-#                                                 else:
-#                                                     self._throwError(
-#                                                         SyntaxError, "Missing statement"
-#                                                     )
+                while self._nextTokenIs(TOKEN.LINEBREAK):
+                    self._popNext()
 
-#                                             else:
-#                                                 self._throwError(
-#                                                     SyntaxError, "Missing linebreak"
-#                                                 )
+                statementBlockLocation[str(operand)] = 0
 
-#                                     else:
-#                                         break
+                while (
+                    not 
+                        (self._nextTokenIs(TOKEN.CASE_KEYWORD) 
+                        or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
+                        or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER))
+                    ):
+                    caseCodeBlock.append(self._popNext())
 
-#                                 if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
-#                                     self._moveNextTokenTo(children)
+                while True:
+                    if self._nextTokenIs(TOKEN.CASE_KEYWORD):
+                        self._popNext()
 
-#                                     if self._nextTokenIs(TOKEN.LINEBREAK):
-#                                         self._moveNextTokenTo(children)
+                        operand = self._Operand()
+                        if operand is not None:
 
-#                                         statement = self._Statements()
-#                                         if statement is not None:
-#                                             children.append(statement)
+                            while self._nextTokenIs(TOKEN.LINEBREAK):
+                                self._popNext()
 
-#                                         else:
-#                                             self._throwError(
-#                                                 SyntaxError, "Missing statement"
-#                                             )
+                            if str(it_var) not in statementBlockLocation.keys():
+                                statementBlockLocation[str(operand)] = len(caseCodeBlock)
 
-#                                     else:
-#                                         self._throwError(
-#                                             SyntaxError, "Missing linebreak"
-#                                         )
+                            while (
+                                not 
+                                    (self._nextTokenIs(TOKEN.CASE_KEYWORD) 
+                                    or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+                                    or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD))
+                                ):
+                                caseCodeBlock.append(self._popNext())
 
-#                                 if self._nextTokenIs(
-#                                     TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
-#                                 ):
-#                                     self._moveNextTokenTo(children)
+                        else: 
+                            self._throwError(SyntaxError, "Missing Operand")
+                    else:
+                        break
 
-#                                     return Node("case statement operation", children)
+                if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
+                    self._popNext()
 
-#                                 self._throwError(SyntaxError, 'Missing keyword "OIC"')
+                    while self._nextTokenIs(TOKEN.LINEBREAK):
+                        self._popNext()
 
-#                             self._throwError(SyntaxError, "Missing statement")
+                    if str(it_var) not in statementBlockLocation.keys():
+                        statementBlockLocation[str(it_var)] = len(caseCodeBlock)
 
-#                         self._throwError(SyntaxError, "Missing linebreak")
+                    while (not (self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER))):
+                        caseCodeBlock.append(self._popNext())
 
-#                     self._throwError(SyntaxError, "Missing Operand")
+                self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
 
-#                 self._throwError(SyntaxError, 'Missing keyword "O RLY"')
+                if str(it_var) in statementBlockLocation.keys():
 
-#             self._throwError(SyntaxError, "Missing linebreak")
+                    currentLineNumber = self.currentLineNumber
+                    remainingLexemes = self.lexemes
 
-#         return None
+                    self.lexemes = caseCodeBlock[statementBlockLocation[it_var]: len(caseCodeBlock)]
+
+                    print(caseCodeBlock[statementBlockLocation[it_var]].lexeme)
+
+                    self.currentLineNumber = 0
+
+                    self._Statements()
+
+                    self.lexemes = remainingLexemes
+                    self.currentLineNumber = currentLineNumber
+
+                return True
+
+            self._throwError(SyntaxError, "Missing Operand")
+
+        return None
 
     # !!! no nested loops
     # !!! does not verify loop identifier
