@@ -1,15 +1,16 @@
 from copy import deepcopy
-from .abstractions import ABSTRACTION
-from .token_enum import TOKEN
-from .utils import isEmpty, toNumber
+
 import easygui
 
+from .token_enum import TOKEN
+from .utils import isEmpty, toNumber
 
-class Parser:
-    def parse(self, sourceCode, lexemes):
+
+class Evaluator:
+    def evaluate(self, sourceCode, tokens):
         self.currentLineNumber = 1
         self.sourceCodeLines = sourceCode.split("\n")
-        self.lexemes = lexemes
+        self.tokens = tokens
 
         self.memory = {}
         self.memoryStack = []
@@ -20,18 +21,18 @@ class Parser:
         return self._Program()
 
     def _nextTokenIs(self, tokenType):
-        if isEmpty(self.lexemes):
-            return
+        if isEmpty(self.tokens):
+            return None
 
-        return self.lexemes[0].lexemeType == tokenType
+        return self.tokens[0].lexemeType == tokenType
 
     def _popNext(self):
+        if isEmpty(self.tokens):
+            return None
+
         self._updateCurrentLineNumber()
 
-        if isEmpty(self.lexemes):
-            return
-
-        return self.lexemes.pop(0)
+        return self.tokens.pop(0)
 
     def _updateCurrentLineNumber(self):
         if self._nextTokenIs(TOKEN.LINEBREAK):
@@ -270,7 +271,7 @@ class Parser:
             or self._nextTokenIs(TOKEN.AND_OPERATION)
             or self._nextTokenIs(TOKEN.OR_OPERATION)
             or self._nextTokenIs(TOKEN.XOR_OPERATION)
-            or self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) 
+            or self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION)
             or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)
         ):
             operationToken = self._popNext()
@@ -414,7 +415,7 @@ class Parser:
 
                 return True
 
-            self.lexemes.insert(0, variableIdentifierToken)
+            self.tokens.insert(0, variableIdentifierToken)
 
             return None
 
@@ -444,7 +445,7 @@ class Parser:
 
                 self._throwError(SyntaxError, "Expected operand")
 
-            self.lexemes.insert(0, variableIdentifierToken)
+            self.tokens.insert(0, variableIdentifierToken)
 
             return None
 
@@ -464,14 +465,14 @@ class Parser:
             while self._nextTokenIs(TOKEN.LINEBREAK):
                 self._popNext()
 
-            ifBlockLexemes = []
+            ifBlockTokens = []
             while not (
                 self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD)
                 or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
             ):
-                ifBlockLexemes.append(self._popNext())
+                ifBlockTokens.append(self._popNext())
 
-            statementBlockDict[self._getValue(TOKEN.IT_VARIABLE)] = ifBlockLexemes
+            statementBlockDict[self._getValue(TOKEN.IT_VARIABLE)] = ifBlockTokens
 
             if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
                 self._popNext()
@@ -481,27 +482,27 @@ class Parser:
                 while self._nextTokenIs(TOKEN.LINEBREAK):
                     self._popNext()
 
-                elseBlockLexemes = []
+                elseBlockTokens = []
                 while not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER):
-                    elseBlockLexemes.append(self._popNext())
+                    elseBlockTokens.append(self._popNext())
 
                 if True not in statementBlockDict.keys():
-                    statementBlockDict[True] = elseBlockLexemes
+                    statementBlockDict[True] = elseBlockTokens
 
             self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
 
             if True in statementBlockDict.keys():
-                remainingLexemes = self.lexemes
+                remainingTokens = self.tokens
 
                 currentLineNumber = self.currentLineNumber
-                self.lexemes = statementBlockDict[True]
+                self.tokens = statementBlockDict[True]
                 self.currentLineNumber = 0
 
                 self._enterNewScope()
                 self._Statements()
                 self._exitCurrentScope()
 
-                self.lexemes = remainingLexemes
+                self.tokens = remainingTokens
                 self.currentLineNumber = currentLineNumber
 
             return True
@@ -514,7 +515,7 @@ class Parser:
 
             if self._nextTokenIs(TOKEN.BREAK_STATEMENT):
 
-                self.lexemes = []
+                self.tokens = []
                 self.canGTFO = False
                 return None
 
@@ -599,10 +600,10 @@ class Parser:
                 if str(it_var) in statementBlockLocation.keys():
 
                     currentLineNumber = self.currentLineNumber
-                    remainingLexemes = self.lexemes
+                    remainingTokens = self.tokens
                     self.canGTFO = True
 
-                    self.lexemes = caseCodeBlock[
+                    self.tokens = caseCodeBlock[
                         statementBlockLocation[it_var] : len(caseCodeBlock)
                     ]
 
@@ -612,7 +613,7 @@ class Parser:
                     self._Statements()
                     self._exitCurrentScope()
 
-                    self.lexemes = remainingLexemes
+                    self.tokens = remainingTokens
                     self.currentLineNumber = currentLineNumber
 
                 return True
@@ -648,7 +649,7 @@ class Parser:
                         variableIdentifierToken = self._popNext()
                         variableIdentifier = variableIdentifierToken.lexeme
 
-                        conditionExpressionLexemes = []
+                        conditionExpressionTokens = []
                         hasLoopCondition = False
                         if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
                             loopConditionKeywordToken = self._popNext()
@@ -656,7 +657,7 @@ class Parser:
                             hasLoopCondition = True
 
                             while not self._nextTokenIs(TOKEN.LINEBREAK):
-                                conditionExpressionLexemes.append(self._popNext())
+                                conditionExpressionTokens.append(self._popNext())
 
                         self._expectNext(
                             TOKEN.LINEBREAK, "Missing condition or new line"
@@ -665,9 +666,9 @@ class Parser:
                         while self._nextTokenIs(TOKEN.LINEBREAK):
                             self._popNext()
 
-                        loopBlockLexemes = []
+                        loopBlockTokens = []
                         while not self._nextTokenIs(TOKEN.LOOP_DELIMITER):
-                            loopBlockLexemes.append(self._popNext())
+                            loopBlockTokens.append(self._popNext())
 
                         self._expectNext(TOKEN.LOOP_DELIMITER, "Missing loop closing")
 
@@ -675,10 +676,10 @@ class Parser:
                             TOKEN.LOOP_IDENTIFIER, "Missing loop identifier"
                         )
 
-                        remainderLexemes = self.lexemes
+                        remainingTokens = self.tokens
 
                         while True:
-                            self.lexemes = conditionExpressionLexemes + loopBlockLexemes
+                            self.tokens = conditionExpressionTokens + loopBlockTokens
                             self.currentLineNumber = loopHeaderLineNumber + 1
 
                             if hasLoopCondition:
@@ -699,7 +700,7 @@ class Parser:
                                 self._getValue(variableIdentifier) + delta,
                             )
 
-                        self.lexemes = remainderLexemes
+                        self.tokens = remainingTokens
 
                         return True
 

@@ -61,12 +61,12 @@ class Lexer:
         }
 
     def process(self, content):
-        self.lexemes = []
+        self.tokens = []
 
         content = self._removeIndents(content)
         content = self._removeComments(content)
         self._tokenizeSourceCode(content)
-        return self.lexemes
+        return self.tokens
 
     def _removeIndents(self, content):
         return re.sub(r"\t", "", content)
@@ -97,7 +97,7 @@ class Lexer:
 
                 lexemeType = self._getLexemeType(buffer)
                 if lexemeType != None:
-                    self.lexemes.append(Token(buffer, lexemeType))
+                    self.tokens.append(Token(buffer, lexemeType))
                     previousLexemeType = lexemeType
 
                     buffer = ""
@@ -115,13 +115,13 @@ class Lexer:
 
             identifierLexemeType = self._getIdentifierTypeBasedOn(previousLexemeType)
 
-            self.lexemes.append(Token(identifier, identifierLexemeType))
+            self.tokens.append(Token(identifier, identifierLexemeType))
             self.currentLineColumnNumber += len(identifier) + 1
             previousLexemeType = identifierLexemeType
 
             buffer = ""
 
-        self.lexemes.append(Token("\n", TOKEN.LINEBREAK))
+        self.tokens.append(Token("\n", TOKEN.LINEBREAK))
 
     def _throwSyntaxError(self, message):
         # column number is not accurate due to source code cleaning

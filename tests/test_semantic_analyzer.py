@@ -1,10 +1,10 @@
 import unittest
 from src.components.lexer import Lexer
-from src.components.syntax_analyzer import Parser
+from components.evaluator import Evaluator
 
 
 lexer = Lexer()
-parser = Parser()
+parser = Evaluator()
 
 
 class TestDeclarationAbstraction(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestDeclarationAbstraction(unittest.TestCase):
         KTHXBYE"""
         )
 
-        parser.parse(lexemes)
+        parser.evaluate(lexemes)
         self.assertIsNone(parser.memory["var"])
 
     def test_valid_declaration_with_value(self):
@@ -25,5 +25,5 @@ class TestDeclarationAbstraction(unittest.TestCase):
         KTHXBYE"""
         )
 
-        parser.parse(lexemes)
+        parser.evaluate(lexemes)
         self.assertEqual(parser.memory["var"], 5)

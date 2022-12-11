@@ -1,10 +1,10 @@
 import unittest
 from src.components.lexer import Lexer
-from src.components.syntax_analyzer import Parser
+from components.evaluator import Evaluator
 
 
 lexer = Lexer()
-parser = Parser()
+parser = Evaluator()
 
 
 class TestProgramAbstraction(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestProgramAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -27,7 +27,7 @@ class TestProgramAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -35,19 +35,19 @@ class TestProgramAbstraction(unittest.TestCase):
         lexemes = lexer.process("KTHXBYE")
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_no_kthxbye(self):
         lexemes = lexer.process("HAI")
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_no_newlines(self):
         lexemes = lexer.process("HAI KTHXBYE")
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
         lexemes = lexer.process(
             """HAI VISIBLE 1
@@ -55,7 +55,7 @@ class TestProgramAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_extra_newlines(self):
         lexemes = lexer.process(
@@ -67,7 +67,7 @@ class TestProgramAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -83,7 +83,7 @@ class TestStatementsAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -94,7 +94,7 @@ class TestStatementsAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_extra_newlines(self):
         lexemes = lexer.process(
@@ -106,7 +106,7 @@ class TestStatementsAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -120,7 +120,7 @@ class TestOutputAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -136,7 +136,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -150,7 +150,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_no_increment_decrement(self):
         lexemes = lexer.process(
@@ -162,7 +162,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_no_yr(self):
         lexemes = lexer.process(
@@ -174,7 +174,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_no_variable(self):
         lexemes = lexer.process(
@@ -186,7 +186,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_incomplete_condition(self):
         lexemes = lexer.process(
@@ -198,7 +198,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
         lexemes = lexer.process(
             """HAI
@@ -209,7 +209,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_allow_no_statement(self):
         lexemes = lexer.process(
@@ -220,7 +220,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -234,7 +234,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_no_closing_name(self):
         lexemes = lexer.process(
@@ -246,7 +246,7 @@ class TestLoopAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
 
 class TestMultipleOperandAbstraction(unittest.TestCase):
@@ -258,7 +258,7 @@ class TestMultipleOperandAbstraction(unittest.TestCase):
         )
 
         try:
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
@@ -270,7 +270,7 @@ class TestMultipleOperandAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)
 
     def test_multiple_and_missing_closing(self):
         lexemes = lexer.process(
@@ -280,4 +280,4 @@ class TestMultipleOperandAbstraction(unittest.TestCase):
         )
 
         with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
+            parser.evaluate(lexemes)

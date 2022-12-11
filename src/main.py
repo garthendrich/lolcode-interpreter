@@ -11,8 +11,8 @@ from tkinter import (
     ttk,
 )
 
-from components.lexer import Lexer, Token
-from components.syntax_analyzer import Parser
+from components.evaluator import Evaluator
+from components.lexer import Lexer
 
 
 def main():
@@ -58,19 +58,17 @@ class Interpreter:
     def processText(self):
         input_text = self.textEditor.getInputFromTextEditor()
         lexer = Lexer()
-        parser = Parser()
+        evaluator = Evaluator()
 
         self.table_lexemes.clearTable()
 
         status = ""
 
         try:
-            lexemes = lexer.process(input_text)
-            self.table_lexemes.insertObjectList(lexemes)
+            tokens = lexer.process(input_text)
+            self.table_lexemes.insertObjectList(tokens)
 
-            ast = parser.parse(input_text, lexemes)
-
-            # tempPrintAstRecursive(ast)
+            evaluator.evaluate(input_text, tokens)
 
         except SyntaxError as error:
             # errorArrowIndenter = (error.offset or 0) * " "
@@ -84,37 +82,11 @@ class Interpreter:
 
             status = f"\nline {lineno}:\n{text.strip()}\n\n{msg}"
 
-        self.console.outputResult(">\n" + getattr(parser, "outputBuffer", "") + "\n")
+        self.console.outputResult(">\n" + getattr(evaluator, "outputBuffer", "") + "\n")
         self.console.outputResult(status + "\n")
 
         self.symbol_table.clearTable()
-        self.symbol_table.insertDictionary(getattr(parser, "memory", ""))
-
-
-# def tempPrintAstRecursive(ast):
-#     if isinstance(ast, Node):
-#         print(ast.type)
-
-#         if hasattr(ast, "body"):
-#             if isinstance(ast.children, str):
-#                 print(ast.children)
-#                 return
-
-#             if isinstance(ast.children, Node):
-#                 tempPrintAstRecursive(ast.children)
-#                 return
-
-#             # if ast.body is an array
-#             for element in ast.children:
-#                 tempPrintAstRecursive(element)
-
-#     if isinstance(ast, str):
-#         print(ast)
-#         return
-
-#     if isinstance(ast, Token):
-#         print(ast.lexemeType)
-#         return
+        self.symbol_table.insertDictionary(getattr(evaluator, "memory", ""))
 
 
 class TextEditor:
