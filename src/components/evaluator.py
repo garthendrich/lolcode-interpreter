@@ -26,7 +26,7 @@ class Evaluator:
 
         return self.tokens[0].lexemeType == tokenType
 
-    def _popNext(self):
+    def _popNextToken(self):
         if isEmpty(self.tokens):
             return None
 
@@ -38,9 +38,9 @@ class Evaluator:
         if self._nextTokenIs(TOKEN.LINEBREAK):
             self.currentLineNumber += 1
 
-    def _expectNext(self, tokenType, errorMessage):
+    def _expectNextToken(self, tokenType, errorMessage):
         if self._nextTokenIs(tokenType):
-            self._popNext()
+            self._popNextToken()
         else:
             self._throwError(SyntaxError, errorMessage)
 
@@ -72,17 +72,17 @@ class Evaluator:
     def _Program(self):
 
         while self._nextTokenIs(TOKEN.LINEBREAK):
-            self._popNext()
+            self._popNextToken()
 
-        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
+        self._expectNextToken(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
 
-        self._expectNext(TOKEN.LINEBREAK, "Missing linebreak")
+        self._expectNextToken(TOKEN.LINEBREAK, "Missing linebreak")
         while self._nextTokenIs(TOKEN.LINEBREAK):
-            self._popNext()
+            self._popNextToken()
 
         self._Statements()
 
-        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing ending keyword "KTHXBYE"')
+        self._expectNextToken(TOKEN.CODE_DELIMITER, 'Missing ending keyword "KTHXBYE"')
 
     def _Statements(self):
         statement = (
@@ -104,23 +104,23 @@ class Evaluator:
 
         if statement is not None:
 
-            self._expectNext(TOKEN.LINEBREAK, "Expected linebreak")
+            self._expectNextToken(TOKEN.LINEBREAK, "Expected linebreak")
             while self._nextTokenIs(TOKEN.LINEBREAK):
-                self._popNext()
+                self._popNextToken()
 
             self._Statements()
 
     def _Declaration(self):
         if self._nextTokenIs(TOKEN.VARIABLE_DECLARATION):
-            self._popNext()
+            self._popNextToken()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                variableIdentifierToken = self._popNext()
+                variableIdentifierToken = self._popNextToken()
                 variableIdentifier = variableIdentifierToken.lexeme
                 value = None
 
                 if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
-                    self._popNext()
+                    self._popNextToken()
 
                     value = self._Operand()
                     if value is None:
@@ -135,7 +135,7 @@ class Evaluator:
 
     def _Output(self):
         if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
-            self._popNext()
+            self._popNextToken()
 
             value = self._Operand()
             if value is None:
@@ -145,7 +145,7 @@ class Evaluator:
 
             while not self._nextTokenIs(TOKEN.LINEBREAK):
                 if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._popNext()
+                    self._popNextToken()
 
                 value = self._Operand()
                 if value is None:
@@ -166,10 +166,10 @@ class Evaluator:
         children = []
 
         if self._nextTokenIs(TOKEN.INPUT_KEYWORD):
-            self._popNext()
+            self._popNextToken()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                variableIdentifierToken = self._popNext()
+                variableIdentifierToken = self._popNextToken()
                 variableIdentifier = variableIdentifierToken.lexeme
 
                 value = easygui.enterbox(self.outputBuffer)
@@ -188,7 +188,7 @@ class Evaluator:
             return literalValue
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            identifierToken = self._popNext()
+            identifierToken = self._popNextToken()
             return self._getValue(identifierToken.lexeme)
 
         operationValue = self._TwoOperandOperation()
@@ -211,24 +211,24 @@ class Evaluator:
 
     def _Literal(self):
         if self._nextTokenIs(TOKEN.BOOL_LITERAL):
-            boolToken = self._popNext()
+            boolToken = self._popNextToken()
             return True if boolToken.lexeme == "WIN" else False
 
         if self._nextTokenIs(TOKEN.FLOAT_LITERAL):
-            integerToken = self._popNext()
+            integerToken = self._popNextToken()
             return float(integerToken.lexeme)
 
         if self._nextTokenIs(TOKEN.INTEGER_LITERAL):
-            integerToken = self._popNext()
+            integerToken = self._popNextToken()
             return int(integerToken.lexeme)
 
         if self._nextTokenIs(TOKEN.STRING_LITERAL):
-            stringToken = self._popNext()
+            stringToken = self._popNextToken()
 
             return stringToken.lexeme[1:-1]  # remove quotes
 
         if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-            typeToken = self._popNext()
+            typeToken = self._popNextToken()
             return typeToken.lexeme  # !!! ?????
 
         return None
@@ -274,11 +274,11 @@ class Evaluator:
             or self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION)
             or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)
         ):
-            operationToken = self._popNext()
+            operationToken = self._popNextToken()
 
             firstOperandValue = self._Operand()
             if firstOperandValue is not None:
-                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
+                self._expectNextToken(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
                 secondOperandValue = self._Operand()
                 if secondOperandValue is not None:
@@ -294,7 +294,7 @@ class Evaluator:
 
     def _NotOperation(self):
         if self._nextTokenIs(TOKEN.NOT_OPERATION):
-            self._popNext()
+            self._popNextToken()
 
             value = self._Operand()
             if value is not None:
@@ -312,7 +312,7 @@ class Evaluator:
             or self._nextTokenIs(TOKEN.INFINITE_ARITY_OR_OPERATION)
             or self._nextTokenIs(TOKEN.CONCATENATION_OPERATION)
         ):
-            operationToken = self._popNext()
+            operationToken = self._popNextToken()
 
             if operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
                 needsMkay = False
@@ -323,14 +323,14 @@ class Evaluator:
             if firstOperandValue is not None:
                 operandValues.append(firstOperandValue)
 
-                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
+                self._expectNextToken(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
                 secondOperandValue = self._Operand()
                 if secondOperandValue is not None:
                     operandValues.append(secondOperandValue)
 
                     while self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                        self._popNext()
+                        self._popNextToken()
 
                         operandValue = self._Operand()
                         if operandValue is not None:
@@ -339,7 +339,7 @@ class Evaluator:
                             self._throwError(SyntaxError, "Expected an operand")
 
                     if needsMkay:
-                        self._expectNext(
+                        self._expectNextToken(
                             TOKEN.INFINITE_ARITY_DELIMITER, 'Missing keyword "MKAY"'
                         )
 
@@ -381,15 +381,15 @@ class Evaluator:
 
     def _ExplicitTypecast(self):
         if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
-            self._popNext()
+            self._popNextToken()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                variableIdentifierToken = self._popNext()
+                variableIdentifierToken = self._popNextToken()
                 variableIdentifier = variableIdentifierToken.lexeme
                 value = self._getValue(variableIdentifier)
 
                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-                    typeToken = self._popNext()
+                    typeToken = self._popNextToken()
 
                     return self._typeCast(typeToken.lexeme, value)
 
@@ -402,7 +402,7 @@ class Evaluator:
     def _AssignmentStatement(self):
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            variableIdentifierToken = self._popNext()
+            variableIdentifierToken = self._popNextToken()
             variableIdentifier = variableIdentifierToken.lexeme
             value = None
 
@@ -411,7 +411,7 @@ class Evaluator:
 
             if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
                 print("assigning var")
-                self._popNext()
+                self._popNextToken()
 
                 value = self._Operand()
                 if value is None:
@@ -430,7 +430,7 @@ class Evaluator:
     def _RecastingStatement(self):
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            variableIdentifierToken = self._popNext()
+            variableIdentifierToken = self._popNextToken()
             variableIdentifier = variableIdentifierToken.lexeme
             value = None
 
@@ -439,12 +439,12 @@ class Evaluator:
 
             if self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
                 print("recasting var")
-                self._popNext()
+                self._popNextToken()
 
                 value = self._getValue(variableIdentifier)
 
                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-                    typeToken = self._popNext()
+                    typeToken = self._popNextToken()
 
                     typedValue = self._typeCast(typeToken.lexeme, value)
 
@@ -463,42 +463,44 @@ class Evaluator:
     def _IfStatement(self):
 
         if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
-            self._popNext()
+            self._popNextToken()
 
             statementBlockDict = {}
 
-            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
-            self._expectNext(TOKEN.IF_STATEMENT_KEYWORD, "Expected 'YA RLY'")
-            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
+            self._expectNextToken(TOKEN.LINEBREAK, "Expected a linebreak")
+            self._expectNextToken(TOKEN.IF_STATEMENT_KEYWORD, "Expected 'YA RLY'")
+            self._expectNextToken(TOKEN.LINEBREAK, "Expected a linebreak")
 
             while self._nextTokenIs(TOKEN.LINEBREAK):
-                self._popNext()
+                self._popNextToken()
 
             ifBlockTokens = []
             while not (
                 self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD)
                 or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
             ):
-                ifBlockTokens.append(self._popNext())
+                ifBlockTokens.append(self._popNextToken())
 
             statementBlockDict[self._getValue(TOKEN.IT_VARIABLE)] = ifBlockTokens
 
             if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
-                self._popNext()
+                self._popNextToken()
 
-                self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
+                self._expectNextToken(TOKEN.LINEBREAK, "Expected a linebreak")
 
                 while self._nextTokenIs(TOKEN.LINEBREAK):
-                    self._popNext()
+                    self._popNextToken()
 
                 elseBlockTokens = []
                 while not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER):
-                    elseBlockTokens.append(self._popNext())
+                    elseBlockTokens.append(self._popNextToken())
 
                 if True not in statementBlockDict.keys():
                     statementBlockDict[True] = elseBlockTokens
 
-            self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
+            self._expectNextToken(
+                TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'"
+            )
 
             if True in statementBlockDict.keys():
                 remainingTokens = self.tokens
@@ -533,22 +535,22 @@ class Evaluator:
     def _CaseStatement(self):
 
         if self._nextTokenIs(TOKEN.SWITCH_CASE_STATEMENT_DELIMITER):
-            self._popNext()
+            self._popNextToken()
 
             statementBlockLocation = {}
             caseCodeBlock = []
             it_var = self._getValue(TOKEN.IT_VARIABLE)
 
-            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
-            self._expectNext(TOKEN.CASE_KEYWORD, "Expected keyword 'OMG'")
+            self._expectNextToken(TOKEN.LINEBREAK, "Expected a linebreak")
+            self._expectNextToken(TOKEN.CASE_KEYWORD, "Expected keyword 'OMG'")
 
             operand = self._Operand()
             if operand is not None:
 
-                self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
+                self._expectNextToken(TOKEN.LINEBREAK, "Expected a linebreak")
 
                 while self._nextTokenIs(TOKEN.LINEBREAK):
-                    self._popNext()
+                    self._popNextToken()
 
                 statementBlockLocation[str(operand)] = 0
 
@@ -557,17 +559,17 @@ class Evaluator:
                     or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
                     or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
                 ):
-                    caseCodeBlock.append(self._popNext())
+                    caseCodeBlock.append(self._popNextToken())
 
                 while True:
                     if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-                        self._popNext()
+                        self._popNextToken()
 
                         operand = self._Operand()
                         if operand is not None:
 
                             while self._nextTokenIs(TOKEN.LINEBREAK):
-                                self._popNext()
+                                self._popNextToken()
 
                             if str(it_var) not in statementBlockLocation.keys():
                                 statementBlockLocation[str(operand)] = len(
@@ -581,7 +583,7 @@ class Evaluator:
                                 )
                                 or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
                             ):
-                                caseCodeBlock.append(self._popNext())
+                                caseCodeBlock.append(self._popNextToken())
 
                         else:
                             self._throwError(SyntaxError, "Missing Operand")
@@ -589,10 +591,10 @@ class Evaluator:
                         break
 
                 if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
-                    self._popNext()
+                    self._popNextToken()
 
                     while self._nextTokenIs(TOKEN.LINEBREAK):
-                        self._popNext()
+                        self._popNextToken()
 
                     if str(it_var) not in statementBlockLocation.keys():
                         statementBlockLocation[str(it_var)] = len(caseCodeBlock)
@@ -600,9 +602,9 @@ class Evaluator:
                     while not (
                         self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
                     ):
-                        caseCodeBlock.append(self._popNext())
+                        caseCodeBlock.append(self._popNextToken())
 
-                self._expectNext(
+                self._expectNextToken(
                     TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'"
                 )
 
@@ -635,53 +637,55 @@ class Evaluator:
     # !!! does not verify loop identifier
     def _LoopStatement(self):
         if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
-            self._popNext()
+            self._popNextToken()
 
             loopHeaderLineNumber = self.currentLineNumber
 
             if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                loopIdentifierToken = self._popNext()
+                loopIdentifierToken = self._popNextToken()
                 loopIdentifier = loopIdentifierToken.lexeme
 
                 if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
                     TOKEN.DECREMENT_KEYWORD
                 ):
-                    deltaToken = self._popNext()
+                    deltaToken = self._popNextToken()
                     if deltaToken.lexeme == "UPPIN":
                         delta = 1
                     elif deltaToken.lexeme == "NERFIN":
                         delta = -1
 
-                    self._expectNext(TOKEN.KEYWORD_IN_LOOP, 'Missing keyword "YR"')
+                    self._expectNextToken(TOKEN.KEYWORD_IN_LOOP, 'Missing keyword "YR"')
 
                     if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                        variableIdentifierToken = self._popNext()
+                        variableIdentifierToken = self._popNextToken()
                         variableIdentifier = variableIdentifierToken.lexeme
 
                         conditionExpressionTokens = []
                         hasLoopCondition = False
                         if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
-                            loopConditionKeywordToken = self._popNext()
+                            loopConditionKeywordToken = self._popNextToken()
 
                             hasLoopCondition = True
 
                             while not self._nextTokenIs(TOKEN.LINEBREAK):
-                                conditionExpressionTokens.append(self._popNext())
+                                conditionExpressionTokens.append(self._popNextToken())
 
-                        self._expectNext(
+                        self._expectNextToken(
                             TOKEN.LINEBREAK, "Missing condition or new line"
                         )
 
                         while self._nextTokenIs(TOKEN.LINEBREAK):
-                            self._popNext()
+                            self._popNextToken()
 
                         loopBlockTokens = []
                         while not self._nextTokenIs(TOKEN.LOOP_DELIMITER):
-                            loopBlockTokens.append(self._popNext())
+                            loopBlockTokens.append(self._popNextToken())
 
-                        self._expectNext(TOKEN.LOOP_DELIMITER, "Missing loop closing")
+                        self._expectNextToken(
+                            TOKEN.LOOP_DELIMITER, "Missing loop closing"
+                        )
 
-                        self._expectNext(
+                        self._expectNextToken(
                             TOKEN.LOOP_IDENTIFIER, "Missing loop identifier"
                         )
 
