@@ -11,6 +11,7 @@ class Parser:
         self.lexemes = lexemes
 
         self.memory = {}
+        self.memoryStack = []
         self.outputBuffer = ""
 
         self.canGTFO = False
@@ -49,6 +50,12 @@ class Parser:
             return self.memory.get(identifier)
 
         self._throwError(NameError, f"{identifier} is not defined")
+
+    def _enterNewScope(self):
+        self.memoryStack.append(deepcopy(self.memory))
+
+    def _exitCurrentScope(self):
+        self.memory = self.memoryStack.pop()
 
     def _throwError(self, errorType, message):
         errorArgs = (
@@ -565,7 +572,9 @@ class Parser:
                 self.lexemes = statementBlockDict[True]
                 self.currentLineNumber = 0
 
+                self._enterNewScope()
                 self._Statements()
+                self._exitCurrentScope()
 
                 self.lexemes = remainingLexemes
                 self.currentLineNumber = currentLineNumber
@@ -668,7 +677,9 @@ class Parser:
 
                     self.currentLineNumber = 0
 
+                    self._enterNewScope()
                     self._Statements()
+                    self._exitCurrentScope()
 
                     self.lexemes = remainingLexemes
                     self.currentLineNumber = currentLineNumber
@@ -748,7 +759,9 @@ class Parser:
                                 if not loopRunCondition:
                                     break
 
+                            self._enterNewScope()
                             self._Statements()
+                            self._exitCurrentScope()
 
                             self._assign(
                                 variableIdentifier,
