@@ -84,7 +84,7 @@ class Interpreter:
 
             status = f"\nline {lineno}:\n{text.strip()}\n\n{msg}"
 
-        self.console.outputResult(">\n" + parser.outputBuffer + "\n")
+        self.console.outputResult(">\n" + getattr(parser, "outputBuffer", "") + "\n")
         self.console.outputResult(status + "\n")
 
 
@@ -112,6 +112,7 @@ class Interpreter:
 #     if isinstance(ast, Token):
 #         print(ast.lexemeType)
 #         return
+
 
 class TextEditor:
     def __init__(self, frame):
