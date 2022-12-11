@@ -4,6 +4,7 @@ from .token_enum import TOKEN
 from .utils import isEmpty, toNumber
 import easygui
 
+
 class Parser:
     def parse(self, sourceCode, lexemes):
         self.currentLineNumber = 1
@@ -91,7 +92,7 @@ class Parser:
             or self._BreakStatement()
         )
 
-        if statement is None: 
+        if statement is None:
             statement = self._Operand()
             self._assign(TOKEN.IT_VARIABLE, statement)
 
@@ -165,7 +166,7 @@ class Parser:
             self._popNext()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                variableIdentifierToken =  self._popNext()
+                variableIdentifierToken = self._popNext()
                 variableIdentifier = variableIdentifierToken.lexeme
 
                 value = easygui.enterbox("input: ")
@@ -252,17 +253,17 @@ class Parser:
         if operationToken.lexemeType == TOKEN.XOR_OPERATION:
             return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
         if operationToken.lexemeType == TOKEN.EQUAL_TO_OPERATION:
-            return (toNumber(a) == toNumber(b))
+            return toNumber(a) == toNumber(b)
         if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
-            return (toNumber(a) != toNumber(b))
+            return toNumber(a) != toNumber(b)
         if operationToken.lexemeType == TOKEN.GREATER_THAN_OR_EQUAL_TO_OPERATION:
-            return (toNumber(a) >= toNumber(b))
+            return toNumber(a) >= toNumber(b)
         if operationToken.lexemeType == TOKEN.LESS_THAN_OR_EQUAL_TO_OPERATION:
-            return (toNumber(a) <= toNumber(b))
+            return toNumber(a) <= toNumber(b)
         if operationToken.lexemeType == TOKEN.GREATER_THAN:
-            return (toNumber(a) > toNumber(b))
+            return toNumber(a) > toNumber(b)
         if operationToken.lexemeType == TOKEN.LESS_THAN:
-            return (toNumber(a) < toNumber(b))
+            return toNumber(a) < toNumber(b)
 
     def _TwoOperandOperation(self):
         if (
@@ -359,12 +360,10 @@ class Parser:
 
         return None
 
-
     def _ComparisonOperation(self):
 
-        if (
-            self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) 
-            or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)
+        if self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) or self._nextTokenIs(
+            TOKEN.NOT_EQUAL_TO_OPERATION
         ):
             operationToken = self._popNext()
 
@@ -372,10 +371,9 @@ class Parser:
             if firstOperandValue is not None:
 
                 self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
-                
-                if (
-                    self._nextTokenIs(TOKEN.MAX_OPERATION) 
-                    or self._nextTokenIs(TOKEN.MIN_OPERATION)
+
+                if self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(
+                    TOKEN.MIN_OPERATION
                 ):
                     operationTypeToken = self._popNext()
 
@@ -389,19 +387,31 @@ class Parser:
 
                             secondOperationOperandValue = self._Operand()
                             if secondOperationOperandValue is not None:
-                                
-                                secondOperandValue = self._operate(operationTypeToken, secondOperandValue, secondOperationOperandValue)
-                                return self._operate(operationToken, firstOperandValue, secondOperandValue)
+
+                                secondOperandValue = self._operate(
+                                    operationTypeToken,
+                                    secondOperandValue,
+                                    secondOperationOperandValue,
+                                )
+                                return self._operate(
+                                    operationToken,
+                                    firstOperandValue,
+                                    secondOperandValue,
+                                )
 
                             return None
 
                         operationToken = operationToken + operationTypeToken
-                        return self._operate(operationToken, firstOperandValue, secondOperandValue)
+                        return self._operate(
+                            operationToken, firstOperandValue, secondOperandValue
+                        )
 
                 secondOperandValue = self._Operand()
                 if secondOperandValue is not None:
 
-                    return self._operate(operationToken, firstOperandValue, secondOperandValue)
+                    return self._operate(
+                        operationToken, firstOperandValue, secondOperandValue
+                    )
 
                 self._throwError(SyntaxError, "Expected an operand")
 
@@ -452,7 +462,6 @@ class Parser:
 
         return None
 
-
     def _AssignmentStatement(self):
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
@@ -472,13 +481,12 @@ class Parser:
 
                 return True
 
-            self.lexemes.insert(0,variableIdentifierToken)
+            self.lexemes.insert(0, variableIdentifierToken)
 
             return None
 
         return None
 
-    
     def _RecastingStatement(self):
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
@@ -515,7 +523,7 @@ class Parser:
                             value = str(round(value, 2))
 
                     self._assign(variableIdentifier, value)
-                    
+
                     return True
 
                 self._throwError(SyntaxError, "Expected operand")
@@ -534,16 +542,17 @@ class Parser:
             statementBlockDict = {}
 
             self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
-
             self._expectNext(TOKEN.IF_STATEMENT_KEYWORD, "Expected 'YA RLY'")
-
             self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
             while self._nextTokenIs(TOKEN.LINEBREAK):
                 self._popNext()
 
             ifBlockLexemes = []
-            while (not (self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD) or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER))):
+            while not (
+                self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD)
+                or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+            ):
                 ifBlockLexemes.append(self._popNext())
 
             statementBlockDict[self._getValue(TOKEN.IT_VARIABLE)] = ifBlockLexemes
@@ -557,7 +566,7 @@ class Parser:
                     self._popNext()
 
                 elseBlockLexemes = []
-                while (not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)):
+                while not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER):
                     elseBlockLexemes.append(self._popNext())
 
                 if True not in statementBlockDict.keys():
@@ -583,7 +592,6 @@ class Parser:
 
         return None
 
-    
     def _BreakStatement(self):
 
         if self.canGTFO:
@@ -593,8 +601,7 @@ class Parser:
                 self.lexemes = []
                 return None
 
-        return None 
-
+        return None
 
     def _CaseStatement(self):
 
@@ -606,12 +613,11 @@ class Parser:
             it_var = self._getValue(TOKEN.IT_VARIABLE)
 
             self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
-
             self._expectNext(TOKEN.CASE_KEYWORD, "Expected keyword 'OMG'")
 
             operand = self._Operand()
             if operand is not None:
-                
+
                 self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
                 while self._nextTokenIs(TOKEN.LINEBREAK):
@@ -619,12 +625,11 @@ class Parser:
 
                 statementBlockLocation[str(operand)] = 0
 
-                while (
-                    not 
-                        (self._nextTokenIs(TOKEN.CASE_KEYWORD) 
-                        or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
-                        or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER))
-                    ):
+                while not (
+                    self._nextTokenIs(TOKEN.CASE_KEYWORD)
+                    or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
+                    or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+                ):
                     caseCodeBlock.append(self._popNext())
 
                 while True:
@@ -638,17 +643,20 @@ class Parser:
                                 self._popNext()
 
                             if str(it_var) not in statementBlockLocation.keys():
-                                statementBlockLocation[str(operand)] = len(caseCodeBlock)
+                                statementBlockLocation[str(operand)] = len(
+                                    caseCodeBlock
+                                )
 
-                            while (
-                                not 
-                                    (self._nextTokenIs(TOKEN.CASE_KEYWORD) 
-                                    or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
-                                    or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD))
-                                ):
+                            while not (
+                                self._nextTokenIs(TOKEN.CASE_KEYWORD)
+                                or self._nextTokenIs(
+                                    TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
+                                )
+                                or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
+                            ):
                                 caseCodeBlock.append(self._popNext())
 
-                        else: 
+                        else:
                             self._throwError(SyntaxError, "Missing Operand")
                     else:
                         break
@@ -662,10 +670,14 @@ class Parser:
                     if str(it_var) not in statementBlockLocation.keys():
                         statementBlockLocation[str(it_var)] = len(caseCodeBlock)
 
-                    while (not (self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER))):
+                    while not (
+                        self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+                    ):
                         caseCodeBlock.append(self._popNext())
 
-                self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
+                self._expectNext(
+                    TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'"
+                )
 
                 if str(it_var) in statementBlockLocation.keys():
 
@@ -673,7 +685,9 @@ class Parser:
                     remainingLexemes = self.lexemes
                     self.canGTFO = True
 
-                    self.lexemes = caseCodeBlock[statementBlockLocation[it_var]: len(caseCodeBlock)]
+                    self.lexemes = caseCodeBlock[
+                        statementBlockLocation[it_var] : len(caseCodeBlock)
+                    ]
 
                     self.currentLineNumber = 0
 
