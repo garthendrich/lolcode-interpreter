@@ -2,8 +2,10 @@ def isEmpty(body):
     return len(body) == 0
 
 
-def toNumber(string):
-    try:
-        return int(string)
-    except ValueError:
-        return float(string)
+def toNumber(value):
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return float(value)
+    return value
