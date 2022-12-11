@@ -2,7 +2,6 @@ import re
 
 from .token_enum import TOKEN
 
-
 class Lexer:
     def __init__(self):
         self.patternTypes = {

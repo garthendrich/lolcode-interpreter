@@ -69,6 +69,9 @@ class Parser:
         raise errorType(message, errorArgs)
 
     def _Program(self):
+        while self._nextTokenIs(TOKEN.LINEBREAK):
+            self._popNext()
+
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
 
         self._expectNext(TOKEN.LINEBREAK, "Missing linebreak")
@@ -169,7 +172,7 @@ class Parser:
                 variableIdentifierToken = self._popNext()
                 variableIdentifier = variableIdentifierToken.lexeme
 
-                value = easygui.enterbox("input: ")
+                value = easygui.enterbox(self.outputBuffer)
                 self._assign(variableIdentifier, value)
 
                 return True
