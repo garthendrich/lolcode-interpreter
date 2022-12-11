@@ -255,6 +255,10 @@ class Evaluator:
                 return bool(a) or bool(b)
             if operationToken.lexemeType == TOKEN.XOR_OPERATION:
                 return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
+
+            if not (isinstance(a, (int, float)) and isinstance(b, (int, float))):
+                self._throwError(SyntaxError, "Invalid Type")
+
             if operationToken.lexemeType == TOKEN.EQUAL_TO_OPERATION:
                 return toNumber(a) == toNumber(b)
             if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
