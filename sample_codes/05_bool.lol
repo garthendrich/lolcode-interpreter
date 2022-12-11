@@ -1,11 +1,7 @@
 HAI
     BTW variable dec
-    I HAS A x
-    I HAS A y
-    
-    VISIBLE "x:" WIN ", y:" WIN
-    x R WIN
-    y R WIN
+    I HAS A x ITZ WIN
+    I HAS A y ITZ FAIL
 
     VISIBLE BOTH OF x AN y
     VISIBLE EITHER OF x AN y
@@ -17,7 +13,7 @@ HAI
     VISIBLE BOTH OF x AN EITHER OF NOT x AN y
 
     VISIBLE "x:" FAIL ", y:" WIN
-    x R FAIL
+    I HAS A x ITZ FAIL
 
     VISIBLE BOTH OF x AN y
     VISIBLE EITHER OF x AN y
@@ -29,7 +25,7 @@ HAI
     VISIBLE BOTH OF x AN EITHER OF NOT x AN y
 
     VISIBLE "x:" FAIL ", y:" FAIL
-    y R FAIL
+    I HAS A y ITZ FAIL
 
     VISIBLE BOTH OF x AN y
     VISIBLE EITHER OF x AN y

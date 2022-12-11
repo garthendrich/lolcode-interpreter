@@ -19,6 +19,18 @@ class TestProgramAbstraction(unittest.TestCase):
         except SyntaxError:
             self.fail("Unexpected syntax error")
 
+    def test_valid_program(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
     def test_no_hai(self):
         lexemes = lexer.process("KTHXBYE")
 
@@ -38,14 +50,6 @@ class TestProgramAbstraction(unittest.TestCase):
             parser.parse(lexemes)
 
         lexemes = lexer.process(
-            """HAI
-        VISIBLE 1 KTHXBYE"""
-        )
-
-        with self.assertRaises(SyntaxError):
-            parser.parse(lexemes)
-
-        lexemes = lexer.process(
             """HAI VISIBLE 1
         KTHXBYE"""
         )
@@ -53,9 +57,76 @@ class TestProgramAbstraction(unittest.TestCase):
         with self.assertRaises(SyntaxError):
             parser.parse(lexemes)
 
+    def test_extra_newlines(self):
+        lexemes = lexer.process(
+            """HAI
+
+
+            VISIBLE 1
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+
+class TestStatementsAbstraction(unittest.TestCase):
+    def test_valid_multiline_statements(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1
+            VISIBLE 2
+            VISIBLE 3
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+    def test_no_newlines(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1 KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_extra_newlines(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE 1
+
+
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+
+class TestOutputAbstraction(unittest.TestCase):
+    def test_valid_multi_operand_output(self):
+        lexemes = lexer.process(
+            """HAI
+            VISIBLE one 2 "three" 4.0 five 6 "7" 8.9 WIN
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
 
 class TestLoopAbstraction(unittest.TestCase):
-    def test_loop(self):
+    def test_valid_loop(self):
         lexemes = lexer.process(
             """HAI
             IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
@@ -171,6 +242,40 @@ class TestLoopAbstraction(unittest.TestCase):
             IM IN YR asc UPPIN YR num2 WILE BOTH SAEM num2 AN SMALLR OF num2 AN num1
                 VISIBLE num2
             IM OUTTA YR
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+
+class TestMultipleOperandAbstraction(unittest.TestCase):
+    def test_valid_multiple_and(self):
+        lexemes = lexer.process(
+            """HAI
+            ALL OF WIN AN WIN AN WIN AN WIN AN FAIL MKAY
+        KTHXBYE"""
+        )
+
+        try:
+            parser.parse(lexemes)
+        except SyntaxError:
+            self.fail("Unexpected syntax error")
+
+    def test_multiple_and_missing_separator(self):
+        lexemes = lexer.process(
+            """HAI
+            ALL OF WIN AN WIN WIN AN WIN AN FAIL MKAY
+        KTHXBYE"""
+        )
+
+        with self.assertRaises(SyntaxError):
+            parser.parse(lexemes)
+
+    def test_multiple_and_missing_closing(self):
+        lexemes = lexer.process(
+            """HAI
+            ALL OF WIN AN WIN AN WIN AN WIN AN FAIL 
         KTHXBYE"""
         )
 

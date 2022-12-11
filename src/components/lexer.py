@@ -25,8 +25,8 @@ class Lexer:
             r"^EITHER OF$": TOKEN.OR_OPERATION,
             r"^WON OF$": TOKEN.XOR_OPERATION,
             r"^NOT$": TOKEN.NOT_OPERATION,
-            r"^ANY OF$": TOKEN.INFINITE_ARITY_AND_OPERATION,
-            r"^ALL OF$": TOKEN.INFINITE_ARITY_OR_OPERATION,
+            r"^ALL OF$": TOKEN.INFINITE_ARITY_AND_OPERATION,
+            r"^ANY OF$": TOKEN.INFINITE_ARITY_OR_OPERATION,
             r"^BOTH SAEM$": TOKEN.EQUAL_TO_OPERATION,
             r"^DIFFRINT$": TOKEN.NOT_EQUAL_TO_OPERATION,
             r"^SMOOSH$": TOKEN.CONCATENATION_OPERATION,
@@ -40,6 +40,7 @@ class Lexer:
             r"^O RLY\?$": TOKEN.IF_ELSE_DELIMITER,
             r"^YA RLY$": TOKEN.IF_STATEMENT_KEYWORD,
             r"^MEBBE$": TOKEN.ELSE_IF_STATEMENT_KEYWORD,
+            r"^GTFO$": TOKEN.BREAK_STATEMENT,
             r"^NO WAI$": TOKEN.ELSE_STATEMENT_KEYWORD,
             r"^OIC$": TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER,
             r"^WTF\?$": TOKEN.SWITCH_CASE_STATEMENT_DELIMITER,
@@ -123,6 +124,8 @@ class Lexer:
         self.lexemes.append(Token("\n", TOKEN.LINEBREAK))
 
     def _throwSyntaxError(self, message):
+        # column number is not accurate due to source code cleaning
+
         syntaxErrorArgs = (
             None,
             self.currentLineNumber,

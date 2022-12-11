@@ -1,185 +1,271 @@
+from copy import deepcopy
 from .abstractions import ABSTRACTION
 from .token_enum import TOKEN
-from .utils import isEmpty
+from .utils import isEmpty, toNumber
+import easygui
 
 
 class Parser:
-    def parse(self, lexemes):
+    def parse(self, sourceCode, lexemes):
+        self.currentLineNumber = 1
+        self.sourceCodeLines = sourceCode.split("\n")
         self.lexemes = lexemes
+
+        self.memory = {}
+        self.memoryStack = []
+        self.outputBuffer = ""
+
+        self.canGTFO = False
 
         return self._Program()
 
     def _nextTokenIs(self, tokenType):
         if isEmpty(self.lexemes):
-            self._throwSyntaxError("Unexpected end of line")
+            return
 
         return self.lexemes[0].lexemeType == tokenType
 
     def _popNext(self):
+        self._updateCurrentLineNumber()
+
         if isEmpty(self.lexemes):
-            self._throwSyntaxError("Unexpected end of line")
+            return
 
         return self.lexemes.pop(0)
 
-    def _moveNextTokenTo(self, list):
-        list.append(self._popNext())
+    def _updateCurrentLineNumber(self):
+        if self._nextTokenIs(TOKEN.LINEBREAK):
+            self.currentLineNumber += 1
+
+    def _expectNext(self, tokenType, errorMessage):
+        if self._nextTokenIs(tokenType):
+            self._popNext()
+        else:
+            self._throwError(SyntaxError, errorMessage)
+
+    def _assign(self, identifier, value):
+        self.memory[identifier] = value
+
+    def _getValue(self, identifier):
+        if identifier in self.memory:
+            return self.memory.get(identifier)
+
+        self._throwError(NameError, f"{identifier} is not defined")
+
+    def _enterNewScope(self):
+        self.memoryStack.append(deepcopy(self.memory))
+
+    def _exitCurrentScope(self):
+        self.memory = self.memoryStack.pop()
+
+    def _throwError(self, errorType, message):
+        errorArgs = (
+            None,
+            self.currentLineNumber,
+            0,  # not yet implemented
+            self.sourceCodeLines[self.currentLineNumber - 1],
+        )
+
+        raise errorType(message, errorArgs)
 
     def _Program(self):
-        children = []
+        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
 
-        if self._nextTokenIs(TOKEN.CODE_DELIMITER):
-            self._moveNextTokenTo(children)
+        self._expectNext(TOKEN.LINEBREAK, "Missing linebreak")
+        while self._nextTokenIs(TOKEN.LINEBREAK):
+            self._popNext()
 
-            if self._nextTokenIs(TOKEN.LINEBREAK):
-                self._moveNextTokenTo(children)
+        self._Statements()
 
-                children.append(self._Statements())
-
-                if self._nextTokenIs(TOKEN.CODE_DELIMITER):
-                    self._moveNextTokenTo(children)
-
-                    return Node(ABSTRACTION.PROGRAM, children)
-
-                self._throwSyntaxError('Missing starting keyword "KTHXBYE"')
-
-            self._throwSyntaxError("Unexpected keyword")
-
-        self._throwSyntaxError('Missing starting keyword "HAI"')
+        self._expectNext(TOKEN.CODE_DELIMITER, 'Missing ending keyword "KTHXBYE"')
 
     def _Statements(self):
         statement = (
             self._Declaration()
             or self._Output()
-            or self._TwoOperandOperation()
-            or self._MultipleOperandOperation()
-            or self._ConcatOperation()
-            or self._ComparisonOperation()
-            or self._ExplicitTypecast()
-            or self._RecastingAndAssignment()
-            or self._IfStatement()
-            or self._CaseStatement()
+            or self._RecastingStatement()
+            or self._AssignmentStatement()
             or self._LoopStatement()
             or self._Input()
+            or self._IfStatement()
+            or self._CaseStatement()
+            or self._BreakStatement()
         )
 
         if statement is None:
-            return None
+            statement = self._Operand()
+            self._assign(TOKEN.IT_VARIABLE, statement)
 
-        children = [statement]
+        if statement is not None:
 
-        if not self._nextTokenIs(TOKEN.LINEBREAK):
-            self._throwSyntaxError("Unexpected keyword")
+            self._expectNext(TOKEN.LINEBREAK, "Expected linebreak")
+            while self._nextTokenIs(TOKEN.LINEBREAK):
+                self._popNext()
 
-        while self._nextTokenIs(TOKEN.LINEBREAK):
-            self._moveNextTokenTo(children)
-
-        nextLineStatements = self._Statements()
-        if nextLineStatements is not None:
-            children.append(nextLineStatements)
-
-        return Node(ABSTRACTION.STATEMENT, children)
+            self._Statements()
 
     def _Declaration(self):
-        children = []
-
         if self._nextTokenIs(TOKEN.VARIABLE_DECLARATION):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                self._moveNextTokenTo(children)
+                variableIdentifierToken = self._popNext()
+                variableIdentifier = variableIdentifierToken.lexeme
+                value = None
 
                 if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
-                    self._moveNextTokenTo(children)
+                    self._popNext()
 
-                    operand = self._Operand()
-                    if operand is None:
-                        self._throwSyntaxError("Expected an expression")
+                    value = self._Operand()
+                    if value is None:
+                        self._throwError(SyntaxError, "Expected an expression")
 
-                    children.append(operand)
+                self._assign(variableIdentifier, value)
+                return True
 
-                return Node(ABSTRACTION.DECLARATION, children)
-
-            self._throwSyntaxError("Expected a variable identifier")
+            self._throwError(SyntaxError, "Expected a variable identifier")
 
         return None
 
-    # !! does not yet accept multiple operands
     def _Output(self):
-        children = []
-
         if self._nextTokenIs(TOKEN.OUTPUT_KEYWORD):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
-            operand = self._Operand()
-            if operand is None:
-                self._throwSyntaxError("Expected an operand")
+            value = self._Operand()
+            if value is None:
+                self._throwError(SyntaxError, "Expected an operand")
 
-            children.append(operand)
+            self._output(value)
 
             while not self._nextTokenIs(TOKEN.LINEBREAK):
-                operand = self._Operand()
-                if operand is None:
-                    self._throwSyntaxError("Expected an operand")
+                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                    self._popNext()
 
-                children.append(operand)
+                value = self._Operand()
+                if value is None:
+                    self._throwError(SyntaxError, "Expected an operand")
 
-            return Node(ABSTRACTION.OUTPUT, children)
+                self._output(value)
+
+            self._output("\n")
+
+            return True
 
         return None
+
+    def _output(self, value):
+        if isinstance(value, bool):
+            value = "WIN" if value == True else "FAIL"
+
+        self.outputBuffer += str(value)
 
     def _Input(self):
         children = []
 
         if self._nextTokenIs(TOKEN.INPUT_KEYWORD):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                self._moveNextTokenTo(children)
+                variableIdentifierToken = self._popNext()
+                variableIdentifier = variableIdentifierToken.lexeme
 
-                return Node(ABSTRACTION.INPUT, children)
+                value = easygui.enterbox("input: ")
+                self._assign(variableIdentifier, value)
+
+                return True
 
         return None
 
     def _Operand(self):
-        literal = self._Literal()
-        if literal is not None:
-            return Node(ABSTRACTION.OPERAND, literal)
+        literalValue = self._Literal()
+        if literalValue is not None:
+            return literalValue
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            lexeme = self._popNext()
-            return Node(ABSTRACTION.OPERAND, lexeme.lexeme)
+            identifierToken = self._popNext()
+            return self._getValue(identifierToken.lexeme)
 
-        operationOperand = (
-            self._TwoOperandOperation()
-            or self._OneOperandOperation()
-            or self._MultipleOperandOperation()
-            or self._ComparisonOperation()
-            or self._ConcatOperation()
-            or self._ExplicitTypecast()
-        )
-        if operationOperand is not None:
-            return Node(ABSTRACTION.OPERAND, operationOperand)
+        operationValue = self._TwoOperandOperation()
+        if operationValue is not None:
+            return operationValue
+
+        operationValue = self._NotOperation()
+        if operationValue is not None:
+            return operationValue
+
+        operationValue = self._MultipleOperandOperation()
+        if operationValue is not None:
+            return operationValue
+
+        operationValue = self._ComparisonOperation()
+        if operationValue is not None:
+            return operationValue
+
+        explicitTypecast = self._ExplicitTypecast()
+        if explicitTypecast is not None:
+            return explicitTypecast
 
         return None
 
     def _Literal(self):
-        if (
-            self._nextTokenIs(TOKEN.BOOL_LITERAL)
-            or self._nextTokenIs(TOKEN.FLOAT_LITERAL)
-            or self._nextTokenIs(TOKEN.INTEGER_LITERAL)
-            or self._nextTokenIs(TOKEN.STRING_LITERAL)
-            or self._nextTokenIs(TOKEN.TYPE_LITERAL)
-            or self._nextTokenIs(TOKEN.STRING_LITERAL)
-        ):
-            lexeme = self._popNext()
-            return Node(lexeme.lexemeType, lexeme.lexeme)
+        if self._nextTokenIs(TOKEN.BOOL_LITERAL):
+            boolToken = self._popNext()
+            return True if boolToken.lexeme == "WIN" else False
+
+        if self._nextTokenIs(TOKEN.FLOAT_LITERAL):
+            integerToken = self._popNext()
+            return float(integerToken.lexeme)
+
+        if self._nextTokenIs(TOKEN.INTEGER_LITERAL):
+            integerToken = self._popNext()
+            return int(integerToken.lexeme)
+
+        if self._nextTokenIs(TOKEN.STRING_LITERAL):
+            stringToken = self._popNext()
+
+            return stringToken.lexeme[1:-1]  # remove quotes
+
+        if self._nextTokenIs(TOKEN.TYPE_LITERAL):
+            typeToken = self._popNext()
+            return typeToken.lexeme  # !!! ?????
 
         return None
 
-    # !!! does not yet accept nested operations
-    def _TwoOperandOperation(self):
-        children = []
+    def _operate(self, operationToken, a, b):
+        if operationToken.lexemeType == TOKEN.ADDITION_OPERATION:
+            return toNumber(a) + toNumber(b)
+        if operationToken.lexemeType == TOKEN.SUBTRACTION_OPERATION:
+            return toNumber(a) - toNumber(b)
+        if operationToken.lexemeType == TOKEN.MULTIPLICATION_OPERATION:
+            return toNumber(a) * toNumber(b)
+        if operationToken.lexemeType == TOKEN.QUOTIENT_OPERATION:
+            return toNumber(a) / toNumber(b)
+        if operationToken.lexemeType == TOKEN.MODULO_OPERATION:
+            return toNumber(a) % toNumber(b)
+        if operationToken.lexemeType == TOKEN.MAX_OPERATION:
+            return max(toNumber(a), toNumber(b))
+        if operationToken.lexemeType == TOKEN.MIN_OPERATION:
+            return min(toNumber(a), toNumber(b))
+        if operationToken.lexemeType == TOKEN.AND_OPERATION:
+            return bool(a) and bool(b)
+        if operationToken.lexemeType == TOKEN.OR_OPERATION:
+            return bool(a) or bool(b)
+        if operationToken.lexemeType == TOKEN.XOR_OPERATION:
+            return (bool(a) and not bool(b)) or (not bool(a) and bool(b))
+        if operationToken.lexemeType == TOKEN.EQUAL_TO_OPERATION:
+            return toNumber(a) == toNumber(b)
+        if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
+            return toNumber(a) != toNumber(b)
+        if operationToken.lexemeType == TOKEN.GREATER_THAN_OR_EQUAL_TO_OPERATION:
+            return toNumber(a) >= toNumber(b)
+        if operationToken.lexemeType == TOKEN.LESS_THAN_OR_EQUAL_TO_OPERATION:
+            return toNumber(a) <= toNumber(b)
+        if operationToken.lexemeType == TOKEN.GREATER_THAN:
+            return toNumber(a) > toNumber(b)
+        if operationToken.lexemeType == TOKEN.LESS_THAN:
+            return toNumber(a) < toNumber(b)
 
+    def _TwoOperandOperation(self):
         if (
             self._nextTokenIs(TOKEN.ADDITION_OPERATION)
             or self._nextTokenIs(TOKEN.SUBTRACTION_OPERATION)
@@ -192,461 +278,518 @@ class Parser:
             or self._nextTokenIs(TOKEN.OR_OPERATION)
             or self._nextTokenIs(TOKEN.XOR_OPERATION)
         ):
-            self._moveNextTokenTo(children)
+            operationToken = self._popNext()
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+            firstOperandValue = self._Operand()
+            if firstOperandValue is not None:
+                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+                secondOperandValue = self._Operand()
+                if secondOperandValue is not None:
+                    return self._operate(
+                        operationToken, firstOperandValue, secondOperandValue
+                    )
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+                self._throwError(SyntaxError, "Expected an operand")
 
-                        # !!! temporary node type
-                        return Node("operation", children)
-
-                    self._throwSyntaxError("Expected an operand")
-
-                self._throwSyntaxError('Missing keyword "AN"')
-
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
-    def _OneOperandOperation(self):
-        children = []
-
+    def _NotOperation(self):
         if self._nextTokenIs(TOKEN.NOT_OPERATION):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+            value = self._Operand()
+            if value is not None:
+                return not value
 
-                return Node("operation", children)
-
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
     def _MultipleOperandOperation(self):
-        children = []
+        operandValues = []
 
-        if self._nextTokenIs(TOKEN.INFINITE_ARITY_AND_OPERATION) or self._nextTokenIs(
-            TOKEN.INFINITE_ARITY_OR_OPERATION
+        if (
+            self._nextTokenIs(TOKEN.INFINITE_ARITY_AND_OPERATION)
+            or self._nextTokenIs(TOKEN.INFINITE_ARITY_OR_OPERATION)
+            or self._nextTokenIs(TOKEN.CONCATENATION_OPERATION)
         ):
+            operationToken = self._popNext()
 
-            self._moveNextTokenTo(children)
+            if operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
+                needsMkay = False
+            else:
+                needsMkay = True
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+            firstOperandValue = self._Operand()
+            if firstOperandValue is not None:
+                operandValues.append(firstOperandValue)
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+                secondOperandValue = self._Operand()
+                if secondOperandValue is not None:
+                    operandValues.append(secondOperandValue)
 
-                        while True:
-                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                                self._moveNextTokenTo(children)
+                    while self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                        self._popNext()
 
-                                operand = self._Operand()
-                                if operand is not None:
-                                    children.append(operand)
+                        operandValue = self._Operand()
+                        if operandValue is not None:
+                            operandValues.append(operandValue)
+                        else:
+                            self._throwError(SyntaxError, "Expected an operand")
 
-                                else:
-                                    self._throwSyntaxError("Expected an operand")
+                    if needsMkay:
+                        self._expectNext(
+                            TOKEN.INFINITE_ARITY_DELIMITER, 'Missing keyword "MKAY"'
+                        )
 
-                            else:
-                                break
+                    if operationToken.lexemeType == TOKEN.INFINITE_ARITY_AND_OPERATION:
+                        return all(operandValues)
+                    if operationToken.lexemeType == TOKEN.INFINITE_ARITY_OR_OPERATION:
+                        return any(operandValues)
+                    if operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
+                        return "".join(operandValues)
 
-                        if self._nextTokenIs(TOKEN.INFINITE_ARITY_DELIMITER):
-                            self._moveNextTokenTo(children)
+                self._throwError(SyntaxError, "Expected an operand")
 
-                            return Node("multiple operand operation", children)
-
-                        self._throwSyntaxError('Missing keyword "Mkay"')
-
-                    self._throwSyntaxError("Expected an operand")
-
-                self._throwSyntaxError('Missing keyword "AN"')
-
-            self._throwSyntaxError("Expected an operand")
-
-        return None
-
-    def _ConcatOperation(self):
-        children = []
-
-        if self._nextTokenIs(TOKEN.CONCATENATION_OPERATION):
-
-            self._moveNextTokenTo(children)
-
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
-
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
-
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
-
-                        while True:
-                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                                self._moveNextTokenTo(children)
-
-                                operand = self._Operand()
-                                if operand is not None:
-                                    children.append(operand)
-
-                                else:
-                                    self._throwSyntaxError("Expected an operand")
-
-                            else:
-                                break
-
-                        return Node("concatenation operation", children)
-
-                    self._throwSyntaxError("Expected an operand")
-
-                self._throwSyntaxError('Missing keyword "AN"')
-
-            self._throwSyntaxError("Expected an operand")
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
     def _ComparisonOperation(self):
-        children = []
 
         if self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) or self._nextTokenIs(
             TOKEN.NOT_EQUAL_TO_OPERATION
         ):
-            self._moveNextTokenTo(children)
+            operationToken = self._popNext()
 
-            operand = self._Operand()
-            if operand is not None:
-                children.append(operand)
+            firstOperandValue = self._Operand()
+            if firstOperandValue is not None:
 
-                if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                    self._moveNextTokenTo(children)
+                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
 
-                    if self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(
-                        TOKEN.MIN_OPERATION
-                    ):
-                        self._moveNextTokenTo(children)
+                if self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(
+                    TOKEN.MIN_OPERATION
+                ):
+                    operationTypeToken = self._popNext()
 
-                        operand = self._Operand()
-                        if operand is not None:
-                            children.append(operand)
+                    print("operation operation type found")
 
-                            if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                                self._moveNextTokenTo(children)
+                    secondOperandValue = self._Operand()
+                    if secondOperandValue is not None:
 
-                                operand = self._Operand()
-                                if operand is not None:
-                                    children.append(operand)
+                        if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
+                            self._popNext()
 
-                            return Node("comparison operation", children)
+                            secondOperationOperandValue = self._Operand()
+                            if secondOperationOperandValue is not None:
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+                                secondOperandValue = self._operate(
+                                    operationTypeToken,
+                                    secondOperandValue,
+                                    secondOperationOperandValue,
+                                )
+                                return self._operate(
+                                    operationToken,
+                                    firstOperandValue,
+                                    secondOperandValue,
+                                )
 
-                        return Node("comparison operation", children)
+                            return None
 
-                    self._throwSyntaxError("Expected an operand")
+                        operationToken = operationToken + operationTypeToken
+                        return self._operate(
+                            operationToken, firstOperandValue, secondOperandValue
+                        )
 
-                self._throwSyntaxError('Missing keyword "AN"')
+                secondOperandValue = self._Operand()
+                if secondOperandValue is not None:
 
-            self._throwSyntaxError("Expected an operand")
+                    return self._operate(
+                        operationToken, firstOperandValue, secondOperandValue
+                    )
+
+                self._throwError(SyntaxError, "Expected an operand")
+
+            self._throwError(SyntaxError, "Expected an operand")
 
         return None
 
     def _ExplicitTypecast(self):
-        children = []
-
         if self._nextTokenIs(TOKEN.EXPLICIT_TYPECASTING_KEYWORD):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
             if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                self._moveNextTokenTo(children)
+                variableIdentifierToken = self._popNext()
+                variableIdentifier = variableIdentifierToken.lexeme
+                value = self._getValue(variableIdentifier)
 
                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-                    self._moveNextTokenTo(children)
+                    typeToken = self._popNext()
 
-                    return Node("explicit typecast operation", children)
+                    if typeToken.lexeme == "TROOF":
+                        return bool(value)
 
-                self._throwSyntaxError("Expected a type literal")
+                    if typeToken.lexeme == "NUMBAR":
+                        if value == None:
+                            return 0.0
 
-            self._throwSyntaxError("Expected a variable identifier")
+                        return float(value)
+
+                    if typeToken.lexeme == "NUMBR":
+                        if value == None:
+                            return 0
+
+                        return int(value)
+
+                    if typeToken.lexeme == "YARN":
+                        if value == None:
+                            return ""  # !!! ???
+
+                        # !!! ???
+                        if isinstance(value, bool):
+                            return "WIN" if value == True else "FAIL"
+
+                        return str(round(value, 2))
+
+                self._throwError(SyntaxError, "Expected a type")
+
+            self._throwError(SyntaxError, "Expected a variable")
 
         return None
 
-    def _RecastingAndAssignment(self):
-        children = []
+    def _AssignmentStatement(self):
 
         if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-            self._moveNextTokenTo(children)
+            variableIdentifierToken = self._popNext()
+            variableIdentifier = variableIdentifierToken.lexeme
+            value = None
 
             if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
-                self._moveNextTokenTo(children)
+                print("assigning var")
+                self._popNext()
 
-                operand = self._Operand()
-                recastTypecast = self._ExplicitTypecast()
-                if operand is not None:
-                    children.append(operand)
+                value = self._Operand()
+                if value is None:
+                    self._throwError(SyntaxError, "Expected operand")
 
-                    return Node("assignment statement", children)
+                self._assign(variableIdentifier, value)
 
-                elif recastTypecast is not None:
-                    children.append(recastTypecast)
+                return True
 
-                    return Node("recast typecast", children)
+            self.lexemes.insert(0, variableIdentifierToken)
 
-                else:
-                    self._throwSyntaxError("Expected operand")
+            return None
 
-            elif self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
-                self._moveNextTokenTo(children)
+        return None
+
+    def _RecastingStatement(self):
+
+        if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+            variableIdentifierToken = self._popNext()
+            variableIdentifier = variableIdentifierToken.lexeme
+            value = None
+
+            if self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
+                print("recasting var")
+                self._popNext()
+
+                value = self._getValue(variableIdentifier)
 
                 if self._nextTokenIs(TOKEN.TYPE_LITERAL):
-                    self._moveNextTokenTo(children)
+                    typeToken = self._popNext()
 
-                    return Node("recast typecast", children)
+                    if typeToken.lexeme == "TROOF":
+                        value = bool(value)
 
-                self._throwSyntaxError("Expected operand")
+                    if typeToken.lexeme == "NUMBAR":
+                        value = float(value) if value != None else 0.0
 
-            self._throwSyntaxError("Expected assignment keyword")
+                    if typeToken.lexeme == "NUMBR":
+                        value = int(value) if value != None else 0
+
+                    if typeToken.lexeme == "YARN":
+                        if value == None:
+                            value = ""
+
+                        if isinstance(value, bool):
+                            value = "WIN" if value else "FAIL"
+
+                        if isinstance(value, int) or isinstance(value, float):
+                            value = str(round(value, 2))
+
+                    self._assign(variableIdentifier, value)
+
+                    return True
+
+                self._throwError(SyntaxError, "Expected operand")
+
+            self.lexemes.insert(0, variableIdentifierToken)
+
+            return None
 
         return None
 
     def _IfStatement(self):
-        children = []
 
         if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
-            if self._nextTokenIs(TOKEN.LINEBREAK):
-                self._moveNextTokenTo(children)
+            statementBlockDict = {}
 
-                if self._nextTokenIs(TOKEN.IF_STATEMENT_KEYWORD):
-                    self._moveNextTokenTo(children)
+            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
+            self._expectNext(TOKEN.IF_STATEMENT_KEYWORD, "Expected 'YA RLY'")
+            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
-                    if self._nextTokenIs(TOKEN.LINEBREAK):
-                        self._moveNextTokenTo(children)
+            while self._nextTokenIs(TOKEN.LINEBREAK):
+                self._popNext()
 
-                        statement = self._Statements()
-                        if statement is not None:
-                            children.append(statement)
+            ifBlockLexemes = []
+            while not (
+                self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD)
+                or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+            ):
+                ifBlockLexemes.append(self._popNext())
 
-                            if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
-                                self._moveNextTokenTo(children)
+            statementBlockDict[self._getValue(TOKEN.IT_VARIABLE)] = ifBlockLexemes
 
-                                if self._nextTokenIs(TOKEN.LINEBREAK):
-                                    self._moveNextTokenTo(children)
+            if self._nextTokenIs(TOKEN.ELSE_STATEMENT_KEYWORD):
+                self._popNext()
 
-                                    statement = self._Statements()
-                                    if statement is not None:
-                                        children.append(statement)
+                self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
-                                    else:
-                                        self._throwSyntaxError("Missing statement")
+                while self._nextTokenIs(TOKEN.LINEBREAK):
+                    self._popNext()
 
-                                else:
-                                    self._throwSyntaxError("Missing linebreak")
+                elseBlockLexemes = []
+                while not self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER):
+                    elseBlockLexemes.append(self._popNext())
 
-                            if self._nextTokenIs(
-                                TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
-                            ):
-                                self._moveNextTokenTo(children)
+                if True not in statementBlockDict.keys():
+                    statementBlockDict[True] = elseBlockLexemes
 
-                                return Node("if statement operation", children)
+            self._expectNext(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'")
 
-                            self._throwSyntaxError('Missing keyword "OIC"')
+            if True in statementBlockDict.keys():
+                remainingLexemes = self.lexemes
 
-                        self._throwSyntaxError("Missing statement")
+                currentLineNumber = self.currentLineNumber
+                self.lexemes = statementBlockDict[True]
+                self.currentLineNumber = 0
 
-                    self._throwSyntaxError("Missing linebreak")
+                self._enterNewScope()
+                self._Statements()
+                self._exitCurrentScope()
 
-                self._throwSyntaxError('Missing keyword "O RLY"')
+                self.lexemes = remainingLexemes
+                self.currentLineNumber = currentLineNumber
 
-            self._throwSyntaxError("Missing linebreak")
+            return True
+
+        return None
+
+    def _BreakStatement(self):
+
+        if self.canGTFO:
+
+            if self._nextTokenIs(TOKEN.BREAK_STATEMENT):
+
+                self.lexemes = []
+                return None
 
         return None
 
     def _CaseStatement(self):
-        children = []
 
         if self._nextTokenIs(TOKEN.SWITCH_CASE_STATEMENT_DELIMITER):
-            self._moveNextTokenTo(children)
+            self._popNext()
 
-            if self._nextTokenIs(TOKEN.LINEBREAK):
-                self._moveNextTokenTo(children)
+            statementBlockLocation = {}
+            caseCodeBlock = []
+            it_var = self._getValue(TOKEN.IT_VARIABLE)
 
-                if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-                    self._moveNextTokenTo(children)
+            self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
+            self._expectNext(TOKEN.CASE_KEYWORD, "Expected keyword 'OMG'")
 
-                    operand = self._Operand()
-                    if operand is not None:
-                        children.append(operand)
+            operand = self._Operand()
+            if operand is not None:
 
-                        if self._nextTokenIs(TOKEN.LINEBREAK):
-                            self._moveNextTokenTo(children)
+                self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
-                            statement = self._Statements()
-                            if statement is not None:
-                                children.append(statement)
+                while self._nextTokenIs(TOKEN.LINEBREAK):
+                    self._popNext()
 
-                                while True:
-                                    if self._nextTokenIs(TOKEN.CASE_KEYWORD):
-                                        self._moveNextTokenTo(children)
+                statementBlockLocation[str(operand)] = 0
 
-                                        operand = self._Operand()
-                                        if operand is not None:
-                                            children.append(operand)
+                while not (
+                    self._nextTokenIs(TOKEN.CASE_KEYWORD)
+                    or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
+                    or self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+                ):
+                    caseCodeBlock.append(self._popNext())
 
-                                            if self._nextTokenIs(TOKEN.LINEBREAK):
-                                                self._moveNextTokenTo(children)
+                while True:
+                    if self._nextTokenIs(TOKEN.CASE_KEYWORD):
+                        self._popNext()
 
-                                                statement = self._Statements()
-                                                if statement is not None:
-                                                    children.append(statement)
+                        operand = self._Operand()
+                        if operand is not None:
 
-                                                else:
-                                                    self._throwSyntaxError(
-                                                        "Missing statement"
-                                                    )
+                            while self._nextTokenIs(TOKEN.LINEBREAK):
+                                self._popNext()
 
-                                            else:
-                                                self._throwSyntaxError(
-                                                    "Missing linebreak"
-                                                )
+                            if str(it_var) not in statementBlockLocation.keys():
+                                statementBlockLocation[str(operand)] = len(
+                                    caseCodeBlock
+                                )
 
-                                    else:
-                                        break
-
-                                if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
-                                    self._moveNextTokenTo(children)
-
-                                    if self._nextTokenIs(TOKEN.LINEBREAK):
-                                        self._moveNextTokenTo(children)
-
-                                        statement = self._Statements()
-                                        if statement is not None:
-                                            children.append(statement)
-
-                                        else:
-                                            self._throwSyntaxError("Missing statement")
-
-                                    else:
-                                        self._throwSyntaxError("Missing linebreak")
-
-                                if self._nextTokenIs(
+                            while not (
+                                self._nextTokenIs(TOKEN.CASE_KEYWORD)
+                                or self._nextTokenIs(
                                     TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER
-                                ):
-                                    self._moveNextTokenTo(children)
+                                )
+                                or self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD)
+                            ):
+                                caseCodeBlock.append(self._popNext())
 
-                                    return Node("case statement operation", children)
+                        else:
+                            self._throwError(SyntaxError, "Missing Operand")
+                    else:
+                        break
 
-                                self._throwSyntaxError('Missing keyword "OIC"')
+                if self._nextTokenIs(TOKEN.DEFAULT_CASE_KEYWORD):
+                    self._popNext()
 
-                            self._throwSyntaxError("Missing statement")
+                    while self._nextTokenIs(TOKEN.LINEBREAK):
+                        self._popNext()
 
-                        self._throwSyntaxError("Missing linebreak")
+                    if str(it_var) not in statementBlockLocation.keys():
+                        statementBlockLocation[str(it_var)] = len(caseCodeBlock)
 
-                    self._throwSyntaxError("Missing Operand")
+                    while not (
+                        self._nextTokenIs(TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER)
+                    ):
+                        caseCodeBlock.append(self._popNext())
 
-                self._throwSyntaxError('Missing keyword "O RLY"')
+                self._expectNext(
+                    TOKEN.FLOW_CONTROL_STATEMENTS_DELIMITER, "Expected 'OIC'"
+                )
 
-            self._throwSyntaxError("Missing linebreak")
+                if str(it_var) in statementBlockLocation.keys():
+
+                    currentLineNumber = self.currentLineNumber
+                    remainingLexemes = self.lexemes
+                    self.canGTFO = True
+
+                    self.lexemes = caseCodeBlock[
+                        statementBlockLocation[it_var] : len(caseCodeBlock)
+                    ]
+
+                    self.currentLineNumber = 0
+
+                    self._enterNewScope()
+                    self._Statements()
+                    self._exitCurrentScope()
+
+                    self.lexemes = remainingLexemes
+                    self.currentLineNumber = currentLineNumber
+
+                return True
+
+            self._throwError(SyntaxError, "Missing Operand")
 
         return None
 
+    # !!! no nested loops
+    # !!! does not verify loop identifier
     def _LoopStatement(self):
-        children = []
-
         if self._nextTokenIs(TOKEN.LOOP_DECLARATION_AND_DELIMITER):
-            self._moveNextTokenTo(children)
+            self._popNext()
+
+            loopHeaderLineNumber = self.currentLineNumber
 
             if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                self._moveNextTokenTo(children)
+                loopIdentifierToken = self._popNext()
+                loopIdentifier = loopIdentifierToken.lexeme
 
                 if self._nextTokenIs(TOKEN.INCREMENT_KEYWORD) or self._nextTokenIs(
                     TOKEN.DECREMENT_KEYWORD
                 ):
-                    self._moveNextTokenTo(children)
+                    deltaToken = self._popNext()
+                    if deltaToken.lexeme == "UPPIN":
+                        delta = 1
+                    elif deltaToken.lexeme == "NERFIN":
+                        delta = -1
 
-                    if self._nextTokenIs(TOKEN.KEYWORD_IN_LOOP):
-                        self._moveNextTokenTo(children)
+                    self._expectNext(TOKEN.KEYWORD_IN_LOOP, 'Missing keyword "YR"')
 
-                        if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
-                            self._moveNextTokenTo(children)
+                    if self._nextTokenIs(TOKEN.VARIABLE_IDENTIFIER):
+                        variableIdentifierToken = self._popNext()
+                        variableIdentifier = variableIdentifierToken.lexeme
 
-                            if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
-                                self._moveNextTokenTo(children)
+                        conditionExpressionLexemes = []
+                        hasLoopCondition = False
+                        if self._nextTokenIs(TOKEN.LOOP_CONDITION_KEYWORD):
+                            loopConditionKeywordToken = self._popNext()
 
-                                troofExpression = (
-                                    self._ComparisonOperation()
-                                    or self._TwoOperandOperation()
-                                    or self._MultipleOperandOperation()
-                                )
-                                if troofExpression is not None:
-                                    children.append(troofExpression)
+                            hasLoopCondition = True
 
-                                else:
-                                    self._throwSyntaxError("Missing Troof Expression")
+                            while not self._nextTokenIs(TOKEN.LINEBREAK):
+                                conditionExpressionLexemes.append(self._popNext())
 
-                            if self._nextTokenIs(TOKEN.LINEBREAK):
-                                self._moveNextTokenTo(children)
+                        self._expectNext(
+                            TOKEN.LINEBREAK, "Missing condition or new line"
+                        )
 
-                                statement = self._Statements()
-                                if statement is not None:
-                                    children.append(statement)
+                        while self._nextTokenIs(TOKEN.LINEBREAK):
+                            self._popNext()
 
-                                if self._nextTokenIs(TOKEN.LOOP_DELIMITER):
-                                    self._moveNextTokenTo(children)
+                        loopBlockLexemes = []
+                        while not self._nextTokenIs(TOKEN.LOOP_DELIMITER):
+                            loopBlockLexemes.append(self._popNext())
 
-                                    if self._nextTokenIs(TOKEN.LOOP_IDENTIFIER):
-                                        self._moveNextTokenTo(children)
+                        self._expectNext(TOKEN.LOOP_DELIMITER, "Missing loop closing")
 
-                                        return Node("loop statement", children)
+                        self._expectNext(
+                            TOKEN.LOOP_IDENTIFIER, "Missing loop identifier"
+                        )
 
-                                    self._throwSyntaxError("Missing Loop Identifier")
+                        remainderLexemes = self.lexemes
 
-                                self._throwSyntaxError("Missing Loop Delimeter")
+                        while True:
+                            self.lexemes = conditionExpressionLexemes + loopBlockLexemes
+                            self.currentLineNumber = loopHeaderLineNumber + 1
 
-                            self._throwSyntaxError("Missing linebreak")
+                            if hasLoopCondition:
+                                if loopConditionKeywordToken.lexeme == "WILE":
+                                    loopRunCondition = self._Operand()
+                                elif loopConditionKeywordToken.lexeme == "TIL":
+                                    loopRunCondition = not self._Operand()
 
-                        self._throwSyntaxError("Missing Variable Identifier")
+                                if not loopRunCondition:
+                                    break
 
-                    self._throwSyntaxError('Missing keyword "YR"')
+                            self._enterNewScope()
+                            self._Statements()
+                            self._exitCurrentScope()
 
-                self._throwSyntaxError("Missing UPPIN/NERFIN keyword")
+                            self._assign(
+                                variableIdentifier,
+                                self._getValue(variableIdentifier) + delta,
+                            )
 
-            self._throwSyntaxError("Missing loop identifier")
+                        self.lexemes = remainderLexemes
+
+                        return True
+
+                    self._throwError(SyntaxError, "Missing variable")
+
+                self._throwError(SyntaxError, "Missing UPPIN/NERFIN keyword")
+
+            self._throwError(SyntaxError, "Missing loop name")
 
         return None
-
-    def _throwSyntaxError(self, message):
-        syntaxErrorArgs = (
-            None,
-            None,
-            0,
-            None,
-        )
-
-        raise SyntaxError(message, syntaxErrorArgs)
-
-
-class Node:
-    def __init__(self, type, children: list):
-        self.type = type
-        self.children = children
