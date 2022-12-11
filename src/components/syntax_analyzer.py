@@ -520,10 +520,11 @@ class Parser:
         return None
 
     def _IfStatement(self):
-        statementBlockDict = {}
 
         if self._nextTokenIs(TOKEN.IF_ELSE_DELIMITER):
             self._popNext()
+
+            statementBlockDict = {}
 
             self._expectNext(TOKEN.LINEBREAK, "Expected a linebreak")
 
@@ -560,12 +561,14 @@ class Parser:
             if True in statementBlockDict.keys():
                 remainingLexemes = self.lexemes
 
+                currentLineNumber = self.currentLineNumber
                 self.lexemes = statementBlockDict[True]
                 self.currentLineNumber = 0
 
                 self._Statements()
 
                 self.lexemes = remainingLexemes
+                self.currentLineNumber = currentLineNumber
 
             return True
 
@@ -659,10 +662,9 @@ class Parser:
 
                     currentLineNumber = self.currentLineNumber
                     remainingLexemes = self.lexemes
+                    self.canGTFO = True
 
                     self.lexemes = caseCodeBlock[statementBlockLocation[it_var]: len(caseCodeBlock)]
-
-                    print(caseCodeBlock[statementBlockLocation[it_var]].lexeme)
 
                     self.currentLineNumber = 0
 
