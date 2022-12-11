@@ -515,6 +515,7 @@ class Parser:
             if self._nextTokenIs(TOKEN.BREAK_STATEMENT):
 
                 self.lexemes = []
+                self.canGTFO = False
                 return None
 
         return None
