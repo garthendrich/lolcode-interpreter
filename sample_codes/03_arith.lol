@@ -1,12 +1,17 @@
 HAI
     BTW variable dec
-    I HAS A x ITZ 10
-    I HAS A y ITZ 7
+    I HAS A x
+    I HAS A y
+    
+    GIMMEH x
+    GIMMEH y
+
     VISIBLE x "+" y " = " SUM OF x AN y
     VISIBLE x "-" y " = " DIFF OF x AN y
     VISIBLE x "*" y " = " PRODUKT OF x AN y
     VISIBLE x "/" y " = " QUOSHUNT OF x AN y
     VISIBLE x "%" y " = " MOD OF x AN y
+
     VISIBLE "max(" x "," y ") = " BIGGR OF x AN y
     VISIBLE "min(" x "," y ") = " SMALLR OF x AN y
     
