@@ -107,7 +107,7 @@ class TextEditor:
     def openFile(self):
         # MIGHT CAUSE AN ERROR DUE TO DIFFERENT OPERATING SYSTEMS
         filename = filedialog.askopenfilename(
-            initialdir="../",
+            initialdir=".",
             title="Select a file",
             filetypes=(("Text files", "*.lol"), ("all files", "*.*")),
         )
