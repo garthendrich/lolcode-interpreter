@@ -160,10 +160,7 @@ class Evaluator:
         return None
 
     def _output(self, value):
-        if isinstance(value, bool):
-            value = "WIN" if value == True else "FAIL"
-
-        self.outputBuffer += str(value)
+        self.outputBuffer += self._typeCast("YARN", value)
 
     def _Input(self):
         children = []
@@ -357,6 +354,9 @@ class Evaluator:
         return None
 
     def _typeCast(self, type, value):
+        if isinstance(value, str):
+            return value
+
         if type == "TROOF":
             return bool(value)
 
