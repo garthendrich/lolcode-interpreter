@@ -53,7 +53,7 @@ class Lexer:
             r"^TIL$": TOKEN.LOOP_CONDITION_KEYWORD,
             r"^WILE$": TOKEN.LOOP_CONDITION_KEYWORD,
             r"^IM OUTTA YR$": TOKEN.LOOP_DELIMITER,
-            r"^-?\d*.\d+$": TOKEN.FLOAT_LITERAL,
+            r"^-?\d*\.\d+$": TOKEN.FLOAT_LITERAL,
             r"^-?\d+$": TOKEN.INTEGER_LITERAL,
             r"^\".*\"$": TOKEN.STRING_LITERAL,
             r"^(WIN|FAIL)$": TOKEN.BOOL_LITERAL,
