@@ -406,6 +406,9 @@ class Evaluator:
             variableIdentifier = variableIdentifierToken.lexeme
             value = None
 
+            if variableIdentifier not in self.memory.keys():
+                self._throwError(SyntaxError, "Variable not declared")
+
             if self._nextTokenIs(TOKEN.VARIABLE_ASSIGNMENT):
                 print("assigning var")
                 self._popNext()
@@ -430,6 +433,9 @@ class Evaluator:
             variableIdentifierToken = self._popNext()
             variableIdentifier = variableIdentifierToken.lexeme
             value = None
+
+            if variableIdentifier not in self.memory.keys():
+                self._throwError(SyntaxError, "Variable not declared")
 
             if self._nextTokenIs(TOKEN.RECASTING_KEYWORD):
                 print("recasting var")
