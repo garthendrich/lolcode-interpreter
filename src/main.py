@@ -87,6 +87,9 @@ class Interpreter:
         self.console.outputResult(">\n" + getattr(parser, "outputBuffer", "") + "\n")
         self.console.outputResult(status + "\n")
 
+        self.symbol_table.clearTable()
+        self.symbol_table.insertDictionary(getattr(parser, "memory", ""))
+
 
 # def tempPrintAstRecursive(ast):
 #     if isinstance(ast, Node):
@@ -182,6 +185,10 @@ class Table:
     def insertObjectList(self, object_list):
         for token_object in object_list:
             self.addData((token_object.lexeme, token_object.lexemeType))
+
+    def insertDictionary(self, dictionary):
+        for key in dictionary.keys():
+            self.addData((key, dictionary[key]))
 
     def clearTable(self):
         self.table.delete(*self.table.get_children())

@@ -69,6 +69,10 @@ class Parser:
         raise errorType(message, errorArgs)
 
     def _Program(self):
+
+        while self._nextTokenIs(TOKEN.LINEBREAK):
+            self._popNext()
+
         self._expectNext(TOKEN.CODE_DELIMITER, 'Missing starting keyword "HAI"')
 
         self._expectNext(TOKEN.LINEBREAK, "Missing linebreak")
@@ -94,7 +98,8 @@ class Parser:
 
         if statement is None:
             statement = self._Operand()
-            self._assign(TOKEN.IT_VARIABLE, statement)
+            if statement is not None:
+                self._assign(TOKEN.IT_VARIABLE, statement)
 
         if statement is not None:
 
@@ -169,7 +174,7 @@ class Parser:
                 variableIdentifierToken = self._popNext()
                 variableIdentifier = variableIdentifierToken.lexeme
 
-                value = easygui.enterbox("input: ")
+                value = easygui.enterbox(self.outputBuffer)
                 self._assign(variableIdentifier, value)
 
                 return True
@@ -194,10 +199,6 @@ class Parser:
             return operationValue
 
         operationValue = self._MultipleOperandOperation()
-        if operationValue is not None:
-            return operationValue
-
-        operationValue = self._ComparisonOperation()
         if operationValue is not None:
             return operationValue
 
@@ -256,14 +257,6 @@ class Parser:
             return toNumber(a) == toNumber(b)
         if operationToken.lexemeType == TOKEN.NOT_EQUAL_TO_OPERATION:
             return toNumber(a) != toNumber(b)
-        if operationToken.lexemeType == TOKEN.GREATER_THAN_OR_EQUAL_TO_OPERATION:
-            return toNumber(a) >= toNumber(b)
-        if operationToken.lexemeType == TOKEN.LESS_THAN_OR_EQUAL_TO_OPERATION:
-            return toNumber(a) <= toNumber(b)
-        if operationToken.lexemeType == TOKEN.GREATER_THAN:
-            return toNumber(a) > toNumber(b)
-        if operationToken.lexemeType == TOKEN.LESS_THAN:
-            return toNumber(a) < toNumber(b)
 
     def _TwoOperandOperation(self):
         if (
@@ -277,6 +270,8 @@ class Parser:
             or self._nextTokenIs(TOKEN.AND_OPERATION)
             or self._nextTokenIs(TOKEN.OR_OPERATION)
             or self._nextTokenIs(TOKEN.XOR_OPERATION)
+            or self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) 
+            or self._nextTokenIs(TOKEN.NOT_EQUAL_TO_OPERATION)
         ):
             operationToken = self._popNext()
 
@@ -353,65 +348,6 @@ class Parser:
                         return any(operandValues)
                     if operationToken.lexemeType == TOKEN.CONCATENATION_OPERATION:
                         return "".join(operandValues)
-
-                self._throwError(SyntaxError, "Expected an operand")
-
-            self._throwError(SyntaxError, "Expected an operand")
-
-        return None
-
-    def _ComparisonOperation(self):
-
-        if self._nextTokenIs(TOKEN.EQUAL_TO_OPERATION) or self._nextTokenIs(
-            TOKEN.NOT_EQUAL_TO_OPERATION
-        ):
-            operationToken = self._popNext()
-
-            firstOperandValue = self._Operand()
-            if firstOperandValue is not None:
-
-                self._expectNext(TOKEN.OPERAND_SEPARATOR, 'Missing keyword "AN"')
-
-                if self._nextTokenIs(TOKEN.MAX_OPERATION) or self._nextTokenIs(
-                    TOKEN.MIN_OPERATION
-                ):
-                    operationTypeToken = self._popNext()
-
-                    print("operation operation type found")
-
-                    secondOperandValue = self._Operand()
-                    if secondOperandValue is not None:
-
-                        if self._nextTokenIs(TOKEN.OPERAND_SEPARATOR):
-                            self._popNext()
-
-                            secondOperationOperandValue = self._Operand()
-                            if secondOperationOperandValue is not None:
-
-                                secondOperandValue = self._operate(
-                                    operationTypeToken,
-                                    secondOperandValue,
-                                    secondOperationOperandValue,
-                                )
-                                return self._operate(
-                                    operationToken,
-                                    firstOperandValue,
-                                    secondOperandValue,
-                                )
-
-                            return None
-
-                        operationToken = operationToken + operationTypeToken
-                        return self._operate(
-                            operationToken, firstOperandValue, secondOperandValue
-                        )
-
-                secondOperandValue = self._Operand()
-                if secondOperandValue is not None:
-
-                    return self._operate(
-                        operationToken, firstOperandValue, secondOperandValue
-                    )
 
                 self._throwError(SyntaxError, "Expected an operand")
 
